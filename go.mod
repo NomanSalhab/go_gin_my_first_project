@@ -1,4 +1,4 @@
-module go_gin_my_first_project
+module github.com/NomanSalhab/go_gin_my_first_project
 
 go 1.20
 
