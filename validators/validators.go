@@ -1,11 +1,16 @@
 package validators
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/go-playground/validator/v10"
 )
 
 func ValidateFullUserName(field validator.FieldLevel) bool {
-	return strings.Contains(field.Field().String(), " ")
+	return len(field.Field().String()) > 8 /*strings.Contains(field.Field().String(), " ")*/
+}
+
+func ValidateUserIdNotZero(field validator.FieldLevel) bool {
+	fmt.Println(field.Field().String())
+	return field.Field().String() != "0"
 }

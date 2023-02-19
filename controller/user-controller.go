@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"net/http"
+	"errors"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 	"github.com/NomanSalhab/go_gin_my_first_project/service"
@@ -11,30 +11,30 @@ import (
 )
 
 type UserController interface {
-	FindAll() []entity.User
-	Save(ctx *gin.Context) error /*entity.Video*/
-	ShowAll(ctx *gin.Context)
+	FindAllUsers() []entity.User
+	SaveUser(ctx *gin.Context) error
+	FindUser(ctx *gin.Context) (entity.User, error)
 }
 
-type controller struct {
+type userController struct {
 	service service.UserService
 }
 
 var validate *validator.Validate
 
-func New(service service.UserService) UserController {
+func NewUserController(service service.UserService) UserController {
 	validate = validator.New()
 	validate.RegisterValidation("is-full-name", validators.ValidateFullUserName)
-	return &controller{
+	return &userController{
 		service: service,
 	}
 }
 
-func (c *controller) FindAll() []entity.User {
+func (c *userController) FindAllUsers() []entity.User {
 	return c.service.FindAll()
 }
 
-func (c *controller) Save(ctx *gin.Context) error /*entity.Video*/ {
+func (c *userController) SaveUser(ctx *gin.Context) error {
 	var user entity.User
 	err := ctx.ShouldBindJSON(&user)
 	if err != nil {
@@ -46,15 +46,23 @@ func (c *controller) Save(ctx *gin.Context) error /*entity.Video*/ {
 		return err
 	}
 
-	c.service.Save(user)
-	return nil /*video*/
+	if c.service.Save(user).Phone == "" {
+		return errors.New("user phone number is already registered")
+	}
+	return nil
 }
 
-func (c *controller) ShowAll(ctx *gin.Context) {
-	videos := c.service.FindAll()
-	data := gin.H{
-		"title":  "Video Page",
-		"videos": videos,
+func (c *userController) FindUser(ctx *gin.Context) (entity.User, error) {
+
+	var userId entity.UserInfoRequest
+	var user entity.User
+	err := ctx.ShouldBindJSON(&userId)
+	if err != nil {
+		return user, err
 	}
-	ctx.HTML(http.StatusOK, "index.html", data)
+	user, err1 := c.service.FindUser(userId)
+	if err1 != nil {
+		return user, err
+	}
+	return user, nil
 }
