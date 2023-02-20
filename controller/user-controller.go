@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 	"github.com/NomanSalhab/go_gin_my_first_project/service"
@@ -14,6 +15,9 @@ type UserController interface {
 	FindAllUsers() []entity.User
 	SaveUser(ctx *gin.Context) error
 	FindUser(ctx *gin.Context) (entity.User, error)
+	LoginUser(ctx *gin.Context) (entity.User, error)
+	EditUser(ctx *gin.Context) error
+	DeleteUser(ctx *gin.Context) error
 }
 
 type userController struct {
@@ -60,9 +64,55 @@ func (c *userController) FindUser(ctx *gin.Context) (entity.User, error) {
 	if err != nil {
 		return user, err
 	}
-	user, err1 := c.service.FindUser(userId)
-	if err1 != nil {
+	user, err = c.service.FindUser(userId)
+	if err != nil {
 		return user, err
 	}
 	return user, nil
+}
+
+func (c *userController) LoginUser(ctx *gin.Context) (entity.User, error) {
+
+	var userAuth entity.UserLoginRequest
+	var user entity.User
+	err := ctx.ShouldBindJSON(&userAuth)
+	if err != nil {
+		return user, err
+	}
+	user, err = c.service.LoginUser(userAuth)
+	fmt.Println("User is:", user, "/Error Is:", err)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
+func (c *userController) EditUser(ctx *gin.Context) error {
+
+	// var userId entity.UserInfoRequest
+	var user entity.UserEditRequest
+	err := ctx.ShouldBindJSON(&user)
+	if err != nil {
+		return err
+	}
+	err = c.service.EditUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *userController) DeleteUser(ctx *gin.Context) error {
+
+	// var userId entity.UserInfoRequest
+	var user entity.UserInfoRequest
+	err := ctx.ShouldBindJSON(&user)
+	if err != nil {
+		return err
+	}
+	err = c.service.DeleteUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
 }

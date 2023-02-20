@@ -49,6 +49,18 @@ func main() {
 			}
 		})
 
+		apiUsersRoutes.POST("/login", func(ctx *gin.Context) {
+			user, err := UserController.LoginUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{
+					"message": "User Logged In Successfully!",
+					"user":    user,
+				})
+			}
+		})
+
 		apiUsersRoutes.POST("/user_info", func(ctx *gin.Context) {
 			user, err := UserController.FindUser(ctx)
 			if err != nil {
@@ -58,15 +70,33 @@ func main() {
 			}
 		})
 
+		apiUsersRoutes.POST("/edit_user", func(ctx *gin.Context) {
+			err := UserController.EditUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user is edited successfully"})
+			}
+		})
+
+		apiUsersRoutes.POST("/delete_user", func(ctx *gin.Context) {
+			err := UserController.DeleteUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user is deleted successfully"})
+			}
+		})
+
 	}
 
 	apiStoreCategoriesRoutes := server.Group("/api/store_categories")
 	{
-		apiStoreCategoriesRoutes.GET("/get", func(ctx *gin.Context) {
+		apiStoreCategoriesRoutes.GET("/get_store_categories", func(ctx *gin.Context) {
 			ctx.JSON(200, StoreCategoryController.FindAllStoreCategories())
 		})
 
-		apiStoreCategoriesRoutes.POST("/add", func(ctx *gin.Context) {
+		apiStoreCategoriesRoutes.POST("/add_store_category", func(ctx *gin.Context) {
 			err := StoreCategoryController.SaveStoreCategory(ctx)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
