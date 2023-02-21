@@ -88,6 +88,24 @@ func main() {
 			}
 		})
 
+		apiUsersRoutes.POST("/all_addresses", func(ctx *gin.Context) {
+			addresses, err := UserController.UserAddressesList(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": addresses})
+			}
+		})
+
+		apiUsersRoutes.POST("/add_address", func(ctx *gin.Context) {
+			err := UserController.UserAddAddress(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "address is added successfully"})
+			}
+		})
+
 	}
 
 	apiStoreCategoriesRoutes := server.Group("/api/store_categories")

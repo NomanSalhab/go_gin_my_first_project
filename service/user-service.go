@@ -13,6 +13,8 @@ type UserService interface {
 	LoginUser(userAuth entity.UserLoginRequest) (entity.User, error)
 	EditUser(user entity.UserEditRequest) error
 	DeleteUser(user entity.UserInfoRequest) error
+	FindUserAddresses(addressUserId entity.UserAddressesRequest) ([]entity.Address, error)
+	UserAddAddress(addedAddress entity.AddAddressRequest) error
 }
 
 type userService struct {
@@ -66,6 +68,53 @@ func (service *userService) FindUser(id entity.UserInfoRequest) (entity.User, er
 		return user, errors.New("the user couldn't be found")
 	}
 	return user, nil
+}
+
+func (service *userService) FindUserAddresses(addressUserId entity.UserAddressesRequest) ([]entity.Address, error) {
+	users := service.FindAll()
+	var addresses []entity.Address
+	for i := 0; i < len(users) && len(users) != 0; i++ {
+		if addressUserId.UserId != 0 {
+			if users[i].ID == addressUserId.UserId {
+				addresses = users[i].Addresses
+			}
+		} else {
+			return addresses, errors.New("user id cannot be zero")
+		}
+	}
+	if len(addresses) == 0 {
+		return addresses, errors.New("no addresses yet")
+	}
+	return addresses, nil
+}
+
+func (service *userService) UserAddAddress(addedAddress entity.AddAddressRequest) error {
+	users := service.FindAll()
+	address := entity.Address{
+		UserId:    addedAddress.UserId,
+		Name:      addedAddress.Name,
+		Latitude:  addedAddress.Latitude,
+		Longitude: addedAddress.Longitude,
+	}
+	for i := 0; i < len(users) && len(users) != 0; i++ {
+		if addedAddress.UserId != 0 {
+			if users[i].ID == addedAddress.UserId {
+				if len(users[i].Addresses) > 0 {
+					address.ID = users[i].Addresses[len(users[i].Addresses)-1].ID + 1
+				} else {
+					address.ID = 1
+				}
+				if address.ID != 0 {
+					users[i].Addresses = append(users[i].Addresses, address)
+				} else {
+					return errors.New("failed to add the address")
+				}
+			}
+		} else {
+			return errors.New("user id cannot be zero")
+		}
+	}
+	return nil
 }
 
 func (service *userService) LoginUser(userAuth entity.UserLoginRequest) (entity.User, error) {

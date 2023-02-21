@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 	"github.com/NomanSalhab/go_gin_my_first_project/service"
@@ -18,6 +17,8 @@ type UserController interface {
 	LoginUser(ctx *gin.Context) (entity.User, error)
 	EditUser(ctx *gin.Context) error
 	DeleteUser(ctx *gin.Context) error
+	UserAddAddress(ctx *gin.Context) error
+	UserAddressesList(ctx *gin.Context) ([]entity.Address, error)
 }
 
 type userController struct {
@@ -80,7 +81,6 @@ func (c *userController) LoginUser(ctx *gin.Context) (entity.User, error) {
 		return user, err
 	}
 	user, err = c.service.LoginUser(userAuth)
-	fmt.Println("User is:", user, "/Error Is:", err)
 	if err != nil {
 		return user, err
 	}
@@ -111,6 +111,35 @@ func (c *userController) DeleteUser(ctx *gin.Context) error {
 		return err
 	}
 	err = c.service.DeleteUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *userController) UserAddressesList(ctx *gin.Context) ([]entity.Address, error) {
+
+	var addressUserID entity.UserAddressesRequest
+	var address []entity.Address
+	err := ctx.ShouldBindJSON(&addressUserID)
+	if err != nil {
+		return address, err
+	}
+	address, err = c.service.FindUserAddresses(addressUserID)
+	if err != nil {
+		return address, err
+	}
+	return address, nil
+}
+
+func (c *userController) UserAddAddress(ctx *gin.Context) error {
+
+	var addressInfo entity.AddAddressRequest
+	err := ctx.ShouldBindJSON(&addressInfo)
+	if err != nil {
+		return err
+	}
+	err = c.service.UserAddAddress(addressInfo)
 	if err != nil {
 		return err
 	}

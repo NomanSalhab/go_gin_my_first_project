@@ -1,6 +1,6 @@
 package entity
 
 type StoreCategory struct {
-	ID   int8   `json:"id"`
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
