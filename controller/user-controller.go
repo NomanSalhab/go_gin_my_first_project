@@ -140,8 +140,8 @@ func (c *userController) UserAddAddress(ctx *gin.Context) error {
 		return err
 	}
 	err = c.service.UserAddAddress(addressInfo)
-	if err != nil {
+	/*if err != nil {
 		return err
-	}
-	return nil
+	}*/
+	return err
 }

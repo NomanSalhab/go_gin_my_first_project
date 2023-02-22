@@ -27,9 +27,6 @@ func NewUserService() UserService {
 
 func (service *userService) Save(user entity.User) entity.User {
 	var failUser entity.User
-	/*if user.ID == 0 {
-		return failUser
-	}*/
 	for i := 0; i < len(service.users); i++ {
 		if service.users[i].Phone == user.Phone {
 			return failUser
@@ -106,6 +103,7 @@ func (service *userService) UserAddAddress(addedAddress entity.AddAddressRequest
 				}
 				if address.ID != 0 {
 					users[i].Addresses = append(users[i].Addresses, address)
+					return nil
 				} else {
 					return errors.New("failed to add the address")
 				}
@@ -114,7 +112,7 @@ func (service *userService) UserAddAddress(addedAddress entity.AddAddressRequest
 			return errors.New("user id cannot be zero")
 		}
 	}
-	return nil
+	return errors.New("user is not found")
 }
 
 func (service *userService) LoginUser(userAuth entity.UserLoginRequest) (entity.User, error) {

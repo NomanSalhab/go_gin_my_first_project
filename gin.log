@@ -1,0 +1,43 @@
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /api/users/all_users      --> main.main.func1 (5 handlers)
+[GIN-debug] POST   /api/users/signup         --> main.main.func2 (5 handlers)
+[GIN-debug] POST   /api/users/login          --> main.main.func3 (5 handlers)
+[GIN-debug] POST   /api/users/user_info      --> main.main.func4 (5 handlers)
+[GIN-debug] PUT    /api/users/edit_user      --> main.main.func5 (5 handlers)
+[GIN-debug] DELETE /api/users/delete_user    --> main.main.func6 (5 handlers)
+[GIN-debug] POST   /api/users/user_addresses --> main.main.func7 (5 handlers)
+[GIN-debug] POST   /api/users/add_address    --> main.main.func8 (5 handlers)
+[GIN-debug] GET    /api/store_categories/get_store_categories --> main.main.func9 (5 handlers)
+[GIN-debug] GET    /api/store_categories/get_active_store_categories --> main.main.func10 (5 handlers)
+[GIN-debug] GET    /api/store_categories/get_not_active_store_categories --> main.main.func11 (5 handlers)
+[GIN-debug] POST   /api/store_categories/add_store_category --> main.main.func12 (5 handlers)
+[GIN-debug] POST   /api/store_categories/store_category_info --> main.main.func13 (5 handlers)
+[GIN-debug] PUT    /api/store_categories/edit_store_category --> main.main.func14 (5 handlers)
+[GIN-debug] DELETE /api/store_categories/delete_store_category --> main.main.func15 (5 handlers)
+[GIN-debug] GET    /api/stores/get_stores    --> main.main.func16 (5 handlers)
+[GIN-debug] GET    /api/stores/get_active_stores --> main.main.func17 (5 handlers)
+[GIN-debug] GET    /api/stores/get_not_active_stores --> main.main.func18 (5 handlers)
+[GIN-debug] POST   /api/stores/add_store     --> main.main.func19 (5 handlers)
+[GIN-debug] POST   /api/stores/store_info    --> main.main.func20 (5 handlers)
+[GIN-debug] PUT    /api/stores/edit_store    --> main.main.func21 (5 handlers)
+[GIN-debug] DELETE /api/stores/delete_store  --> main.main.func22 (5 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8016
+::1 - [22 Feb 23 04:51 EET] POST /api/store_categories/add_store_category 200 22.5294ms 
+::1 - [22 Feb 23 04:51 EET] POST /api/store_categories/add_store_category 200 8.9794ms 
+::1 - [22 Feb 23 04:51 EET] POST /api/store_categories/add_store_category 200 14.388ms 
+::1 - [22 Feb 23 04:51 EET] POST /api/stores/add_store 200 28.5494ms 
+::1 - [22 Feb 23 04:51 EET] POST /api/stores/add_store 200 12.4518ms 
+::1 - [22 Feb 23 04:52 EET] POST /api/stores/add_store 200 8.6483ms 
+::1 - [22 Feb 23 04:52 EET] GET /api/stores/get_stores 200 14.9786ms 
+::1 - [22 Feb 23 04:52 EET] POST /api/stores/add_store 400 13.7896ms 
+::1 - [22 Feb 23 04:54 EET] PUT /api/stores/edit_store 200 8.8486ms 
+::1 - [22 Feb 23 04:54 EET] GET /api/stores/get_stores 200 13.0078ms 
+::1 - [22 Feb 23 04:55 EET] GET /api/stores/get_stores 200 10.4352ms 
+::1 - [22 Feb 23 04:55 EET] DELETE /api/stores/delete_store 200 7.5304ms 
+::1 - [22 Feb 23 04:55 EET] GET /api/stores/get_stores 200 7.3515ms 
+::1 - [22 Feb 23 04:55 EET] DELETE /api/stores/delete_store 400 10.3458ms 

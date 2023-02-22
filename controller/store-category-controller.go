@@ -8,7 +8,12 @@ import (
 
 type StoreCategoryController interface {
 	FindAllStoreCategories() []entity.StoreCategory
-	SaveStoreCategory(ctx *gin.Context) error
+	AddStoreCategory(ctx *gin.Context) error
+	FindActiveStoreCategories() []entity.StoreCategory
+	FindNotActiveStoreCategories() []entity.StoreCategory
+	GetStoreCategoryById(ctx *gin.Context) (entity.StoreCategory, error)
+	EditStoreCategory(ctx *gin.Context) error
+	DeleteStoreCategory(ctx *gin.Context) error
 }
 
 type storeCategoryController struct {
@@ -27,7 +32,7 @@ func (c *storeCategoryController) FindAllStoreCategories() []entity.StoreCategor
 	return c.service.FindAllStoreCategories()
 }
 
-func (c *storeCategoryController) SaveStoreCategory(ctx *gin.Context) error /*entity.Video*/ {
+func (c *storeCategoryController) AddStoreCategory(ctx *gin.Context) error /*entity.Video*/ {
 	var storeCategory entity.StoreCategory
 	err := ctx.ShouldBindJSON(&storeCategory)
 	if err != nil {
@@ -39,6 +44,54 @@ func (c *storeCategoryController) SaveStoreCategory(ctx *gin.Context) error /*en
 		return err
 	}
 
-	c.service.SaveStoreCategory(storeCategory)
-	return nil /*video*/
+	err = c.service.AddStoreCategory(storeCategory)
+	return err /*video*/
+}
+
+func (c *storeCategoryController) FindActiveStoreCategories() []entity.StoreCategory {
+	return c.service.FindActiveStoreCategories()
+}
+
+func (c *storeCategoryController) FindNotActiveStoreCategories() []entity.StoreCategory {
+	return c.service.FindNotActiveStoreCategories()
+}
+
+func (c *storeCategoryController) GetStoreCategoryById(ctx *gin.Context) (entity.StoreCategory, error) {
+	var storeCategoryId entity.StoreCategoryInfoRequest
+	var storeCategory entity.StoreCategory
+	err := ctx.ShouldBindJSON(&storeCategoryId)
+	if err != nil {
+		return storeCategory, err
+	}
+	storeCategory, err = c.service.FindStoreCategory(storeCategoryId)
+	if err != nil {
+		return storeCategory, err
+	}
+	return storeCategory, nil
+}
+
+func (c *storeCategoryController) EditStoreCategory(ctx *gin.Context) error {
+	var storeCategoryEditInfo entity.StoreCategoryEditRequest
+	err := ctx.ShouldBindJSON(&storeCategoryEditInfo)
+	if err != nil {
+		return err
+	}
+	err = c.service.EditStoreCategory(storeCategoryEditInfo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *storeCategoryController) DeleteStoreCategory(ctx *gin.Context) error {
+	var storeCategoryId entity.StoreCategoryDeleteRequest
+	err := ctx.ShouldBindJSON(&storeCategoryId)
+	if err != nil {
+		return err
+	}
+	err = c.service.DeleteStoreCategory(storeCategoryId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
