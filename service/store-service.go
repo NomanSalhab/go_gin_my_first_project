@@ -13,7 +13,11 @@ type StoreService interface {
 	FindNotActiveStores() []entity.Store
 	FindStore(id entity.StoreInfoRequest) (entity.Store, error)
 	EditStore(storeEditInfo entity.StoreEditRequest) error
+	ActivateStore(storeEditInfo entity.StoreInfoRequest) error
+	DeactivateStore(storeEditInfo entity.StoreInfoRequest) error
 	DeleteStore(store entity.StoreDeleteRequest) error
+
+	AddMockStores(stores []entity.Store)
 }
 
 type storeService struct {
@@ -36,21 +40,8 @@ func (service *storeService) AddStore(store entity.Store) error {
 	} else {
 		successStore.ID = 1
 	}
-
-	if !store.Active {
-		store.Active = false
-	}
-	/*var s *storeCategoryService
-	storeCategories := s.FindAllStoreCategories()
-	if storeCategories != nil {
-		for i := 0; i < len(storeCategories); i++ {
-			if storeCategories[i].ID == successStore.StoreCategoryId {*/
 	service.stores = append(service.stores, successStore)
 	return nil
-	/*}
-		}
-	}
-	return errors.New("sent store category id does not exist")*/
 }
 
 func (service *storeService) FindAllStores() []entity.Store {
@@ -84,39 +75,27 @@ func (service *storeService) FindStore(id entity.StoreInfoRequest) (entity.Store
 		if id.ID != 0 {
 			if stores[i].ID == id.ID {
 				store = stores[i]
+				return store, nil
 			}
 		} else {
 			return store, errors.New("store id cannot be zero")
 		}
 	}
-	if id.ID == 0 {
-		return store, errors.New("store id cannot be zero")
-	}
-	if store.StoreCategoryId == 0 {
-		return store, errors.New("the store category couldn't be found")
-	}
-	if store.Name == "" {
-		return store, errors.New("the store couldn't be found")
-	}
-	return store, nil
+	return store, errors.New("the store couldn't be found")
 }
 
 func (service *storeService) EditStore(storeEditInfo entity.StoreEditRequest) error {
 	stores := service.FindAllStores()
-	var store entity.Store
 	for i := 0; i < len(stores) && len(stores) != 0; i++ {
 		if storeEditInfo.ID != 0 {
 			if stores[i].ID == storeEditInfo.ID {
-				store = entity.Store{
-					ID:     storeEditInfo.ID,
-					Name:   storeEditInfo.Name,
-					Active: storeEditInfo.Active,
-				}
+				// store = entity.Store{
+				// 	ID:     storeEditInfo.ID,
+				// 	Name:   storeEditInfo.Name,
+				// 	Active: storeEditInfo.Active,
+				// }
 				if storeEditInfo.Name != "" {
 					stores[i].Name = storeEditInfo.Name
-				}
-				if storeEditInfo.Active {
-					stores[i].Active = storeEditInfo.Active
 				}
 				if storeEditInfo.Balance != 0 {
 					stores[i].Balance = storeEditInfo.Balance
@@ -127,18 +106,46 @@ func (service *storeService) EditStore(storeEditInfo entity.StoreEditRequest) er
 				if storeEditInfo.Image != "" {
 					stores[i].Image = storeEditInfo.Image
 				}
+				if storeEditInfo.DeliveryRent != 0 {
+					stores[i].DeliveryRent = storeEditInfo.DeliveryRent
+				}
+				return nil
 			}
 		} else {
 			return errors.New("store id cannot be zero")
 		}
 	}
-	if storeEditInfo.ID == 0 {
-		return errors.New("store id cannot be zero")
+	return errors.New("the store couldn't be found")
+}
+
+func (service *storeService) ActivateStore(storeEditInfo entity.StoreInfoRequest) error {
+	stores := service.FindAllStores()
+	for i := 0; i < len(stores) && len(stores) != 0; i++ {
+		if storeEditInfo.ID != 0 {
+			if stores[i].ID == storeEditInfo.ID {
+				stores[i].Active = true
+				return nil
+			}
+		} else {
+			return errors.New("store id cannot be zero")
+		}
 	}
-	if store.ID == 0 {
-		return errors.New("the store couldn't be found")
+	return errors.New("the store couldn't be found")
+}
+
+func (service *storeService) DeactivateStore(storeEditInfo entity.StoreInfoRequest) error {
+	stores := service.FindAllStores()
+	for i := 0; i < len(stores) && len(stores) != 0; i++ {
+		if storeEditInfo.ID != 0 {
+			if stores[i].ID == storeEditInfo.ID {
+				stores[i].Active = false
+				return nil
+			}
+		} else {
+			return errors.New("store id cannot be zero")
+		}
 	}
-	return nil
+	return errors.New("the store couldn't be found")
 }
 
 func (service *storeService) DeleteStore(storeId entity.StoreDeleteRequest) error {
@@ -148,10 +155,8 @@ func (service *storeService) DeleteStore(storeId entity.StoreDeleteRequest) erro
 		return errors.New("store id cannot be zero")
 	}
 	for i := 0; i < len(stores) && len(stores) != 0; i++ {
-		if storeId.ID != 0 {
-			if stores[i].ID != storeId.ID {
-				tempStore = append(tempStore, stores[i])
-			}
+		if stores[i].ID != storeId.ID {
+			tempStore = append(tempStore, stores[i])
 		}
 	}
 	if len(stores) != len(tempStore)+1 {
@@ -159,4 +164,8 @@ func (service *storeService) DeleteStore(storeId entity.StoreDeleteRequest) erro
 	}
 	service.stores = tempStore
 	return nil
+}
+
+func (service *storeService) AddMockStores(stores []entity.Store) {
+	service.stores = append(service.stores, stores...)
 }

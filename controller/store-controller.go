@@ -9,9 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var storeCategoryService service.StoreCategoryService = service.NewStoreCategoryService()
-var StoreCategoryController0 StoreCategoryController = NewStoreCategoryController(storeCategoryService)
-
 type StoreController interface {
 	FindAllStores() []entity.Store
 	AddStore(ctx *gin.Context, cst StoreCategoryController) error
@@ -19,6 +16,8 @@ type StoreController interface {
 	FindNotActiveStores() []entity.Store
 	GetStoreById(ctx *gin.Context) (entity.Store, error)
 	EditStore(ctx *gin.Context, cst StoreCategoryController) error
+	ActivateStore(ctx *gin.Context) error
+	DeactivateStore(ctx *gin.Context) error
 	DeleteStore(ctx *gin.Context) error
 }
 
@@ -90,20 +89,49 @@ func (c *storeController) EditStore(ctx *gin.Context, cst StoreCategoryControlle
 	if err != nil {
 		return err
 	}
+	err = validate.Struct(storeEditInfo)
+	if err != nil {
+		return err
+	}
+
 	storeCategories := cst.FindAllStoreCategories()
-	fmt.Println("Store Category Id:", storeEditInfo.StoreCategoryId, "Store Categories Length:", len(storeCategories))
 	for i := 0; i < len(storeCategories); i++ {
-		// fmt.Println(storeCategories[i].ID, store.StoreCategoryId)
 		if storeCategories[i].ID == storeEditInfo.StoreCategoryId {
 			err = c.service.EditStore(storeEditInfo)
 			return err
 		}
 	}
 	return errors.New("store category does not exist")
-	// if err != nil {
-	// 	return err
-	// }
-	// return nil
+}
+
+func (c *storeController) ActivateStore(ctx *gin.Context) error {
+	var storeEditInfo entity.StoreInfoRequest
+	err := ctx.ShouldBindJSON(&storeEditInfo)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(storeEditInfo)
+	if err != nil {
+		return err
+	}
+
+	err = c.service.ActivateStore(storeEditInfo)
+	return err
+}
+
+func (c *storeController) DeactivateStore(ctx *gin.Context) error {
+	var storeEditInfo entity.StoreInfoRequest
+	err := ctx.ShouldBindJSON(&storeEditInfo)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(storeEditInfo)
+	if err != nil {
+		return err
+	}
+
+	err = c.service.DeactivateStore(storeEditInfo)
+	return err
 }
 
 func (c *storeController) DeleteStore(ctx *gin.Context) error {

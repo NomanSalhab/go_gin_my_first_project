@@ -7,10 +7,18 @@ type User struct {
 	Password  string    `json:"password" binding:"required"` /*,min=8*/
 	Addresses []Address `json:"addresses"`
 	Balance   int       `json:"balance"`
+	Active    bool      `json:"active"`
+	Circles   int       `json:"circles"`
+	Role      int       `json:"role"`
 }
 
 type UserInfoRequest struct {
 	ID int `json:"id"`
+}
+
+type UserCirclesResponse struct {
+	Circles int `json:"circles"`
+	Rate    int `json:"rate"`
 }
 
 type UserLoginRequest struct {
@@ -23,4 +31,11 @@ type UserEditRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	Balance  int    `json:"balance"`
+	Active   bool   `json:"active"` // binding:"required"
+	Role     int    `json:"role"`
+}
+
+type UserIncreaseCirclesRequest struct {
+	ID      int `json:"id"`
+	Circles int `json:"circles"`
 }

@@ -13,6 +13,8 @@ type StoreCategoryController interface {
 	FindNotActiveStoreCategories() []entity.StoreCategory
 	GetStoreCategoryById(ctx *gin.Context) (entity.StoreCategory, error)
 	EditStoreCategory(ctx *gin.Context) error
+	ActivateStoreCategory(ctx *gin.Context) error
+	DeactivateStoreCategory(ctx *gin.Context) error
 	DeleteStoreCategory(ctx *gin.Context) error
 }
 
@@ -76,7 +78,45 @@ func (c *storeCategoryController) EditStoreCategory(ctx *gin.Context) error {
 	if err != nil {
 		return err
 	}
+	err = validate.Struct(storeCategoryEditInfo)
+	if err != nil {
+		return err
+	}
 	err = c.service.EditStoreCategory(storeCategoryEditInfo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *storeCategoryController) ActivateStoreCategory(ctx *gin.Context) error {
+	var storeCategoryId entity.StoreCategoryInfoRequest
+	err := ctx.ShouldBindJSON(&storeCategoryId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(storeCategoryId)
+	if err != nil {
+		return err
+	}
+	err = c.service.ActivateStoreCategory(storeCategoryId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *storeCategoryController) DeactivateStoreCategory(ctx *gin.Context) error {
+	var storeCategoryId entity.StoreCategoryInfoRequest
+	err := ctx.ShouldBindJSON(&storeCategoryId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(storeCategoryId)
+	if err != nil {
+		return err
+	}
+	err = c.service.DeactivateStoreCategory(storeCategoryId)
 	if err != nil {
 		return err
 	}

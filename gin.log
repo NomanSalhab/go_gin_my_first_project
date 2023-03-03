@@ -2,42 +2,66 @@
  - using env:	export GIN_MODE=release
  - using code:	gin.SetMode(gin.ReleaseMode)
 
-[GIN-debug] GET    /api/users/all_users      --> main.main.func1 (5 handlers)
+[GIN-debug] GET    /api/users/all            --> main.main.func1 (5 handlers)
 [GIN-debug] POST   /api/users/signup         --> main.main.func2 (5 handlers)
 [GIN-debug] POST   /api/users/login          --> main.main.func3 (5 handlers)
-[GIN-debug] POST   /api/users/user_info      --> main.main.func4 (5 handlers)
-[GIN-debug] PUT    /api/users/edit_user      --> main.main.func5 (5 handlers)
-[GIN-debug] DELETE /api/users/delete_user    --> main.main.func6 (5 handlers)
-[GIN-debug] POST   /api/users/user_addresses --> main.main.func7 (5 handlers)
-[GIN-debug] POST   /api/users/add_address    --> main.main.func8 (5 handlers)
-[GIN-debug] GET    /api/store_categories/get_store_categories --> main.main.func9 (5 handlers)
-[GIN-debug] GET    /api/store_categories/get_active_store_categories --> main.main.func10 (5 handlers)
-[GIN-debug] GET    /api/store_categories/get_not_active_store_categories --> main.main.func11 (5 handlers)
-[GIN-debug] POST   /api/store_categories/add_store_category --> main.main.func12 (5 handlers)
-[GIN-debug] POST   /api/store_categories/store_category_info --> main.main.func13 (5 handlers)
-[GIN-debug] PUT    /api/store_categories/edit_store_category --> main.main.func14 (5 handlers)
-[GIN-debug] DELETE /api/store_categories/delete_store_category --> main.main.func15 (5 handlers)
-[GIN-debug] GET    /api/stores/get_stores    --> main.main.func16 (5 handlers)
-[GIN-debug] GET    /api/stores/get_active_stores --> main.main.func17 (5 handlers)
-[GIN-debug] GET    /api/stores/get_not_active_stores --> main.main.func18 (5 handlers)
-[GIN-debug] POST   /api/stores/add_store     --> main.main.func19 (5 handlers)
-[GIN-debug] POST   /api/stores/store_info    --> main.main.func20 (5 handlers)
-[GIN-debug] PUT    /api/stores/edit_store    --> main.main.func21 (5 handlers)
-[GIN-debug] DELETE /api/stores/delete_store  --> main.main.func22 (5 handlers)
+[GIN-debug] POST   /api/users/info           --> main.main.func4 (5 handlers)
+[GIN-debug] PUT    /api/users/edit           --> main.main.func5 (5 handlers)
+[GIN-debug] POST   /api/users/user_circles   --> main.main.func6 (5 handlers)
+[GIN-debug] DELETE /api/users/delete         --> main.main.func7 (5 handlers)
+[GIN-debug] POST   /api/users/user_addresses --> main.main.func8 (5 handlers)
+[GIN-debug] POST   /api/users/add_address    --> main.main.func9 (5 handlers)
+[GIN-debug] GET    /api/store_categories/all --> main.main.func10 (5 handlers)
+[GIN-debug] GET    /api/store_categories/active --> main.main.func11 (5 handlers)
+[GIN-debug] GET    /api/store_categories/not_active --> main.main.func12 (5 handlers)
+[GIN-debug] POST   /api/store_categories/add --> main.main.func13 (5 handlers)
+[GIN-debug] POST   /api/store_categories/info --> main.main.func14 (5 handlers)
+[GIN-debug] PUT    /api/store_categories/edit --> main.main.func15 (5 handlers)
+[GIN-debug] PUT    /api/store_categories/activate --> main.main.func16 (5 handlers)
+[GIN-debug] PUT    /api/store_categories/deactivate --> main.main.func17 (5 handlers)
+[GIN-debug] DELETE /api/store_categories/delete --> main.main.func18 (5 handlers)
+[GIN-debug] GET    /api/stores/all           --> main.main.func19 (5 handlers)
+[GIN-debug] GET    /api/stores/active        --> main.main.func20 (5 handlers)
+[GIN-debug] GET    /api/stores/not_active    --> main.main.func21 (5 handlers)
+[GIN-debug] POST   /api/stores/add           --> main.main.func22 (5 handlers)
+[GIN-debug] POST   /api/stores/info          --> main.main.func23 (5 handlers)
+[GIN-debug] PUT    /api/stores/edit          --> main.main.func24 (5 handlers)
+[GIN-debug] PUT    /api/stores/activate      --> main.main.func25 (5 handlers)
+[GIN-debug] PUT    /api/stores/deactivate    --> main.main.func26 (5 handlers)
+[GIN-debug] DELETE /api/stores/delete        --> main.main.func27 (5 handlers)
+[GIN-debug] GET    /api/product_categories/all --> main.main.func28 (5 handlers)
+[GIN-debug] GET    /api/product_categories/active --> main.main.func29 (5 handlers)
+[GIN-debug] GET    /api/product_categories/not_active --> main.main.func30 (5 handlers)
+[GIN-debug] POST   /api/product_categories/store_product_categories --> main.main.func31 (5 handlers)
+[GIN-debug] POST   /api/product_categories/add --> main.main.func32 (5 handlers)
+[GIN-debug] POST   /api/product_categories/info --> main.main.func33 (5 handlers)
+[GIN-debug] PUT    /api/product_categories/edit --> main.main.func34 (5 handlers)
+[GIN-debug] PUT    /api/product_categories/activate --> main.main.func35 (5 handlers)
+[GIN-debug] PUT    /api/product_categories/deactivate --> main.main.func36 (5 handlers)
+[GIN-debug] DELETE /api/product_categories/delete --> main.main.func37 (5 handlers)
+[GIN-debug] GET    /api/products/all         --> main.main.func38 (5 handlers)
+[GIN-debug] GET    /api/products/active      --> main.main.func39 (5 handlers)
+[GIN-debug] GET    /api/products/not_active  --> main.main.func40 (5 handlers)
+[GIN-debug] POST   /api/products/add         --> main.main.func41 (5 handlers)
+[GIN-debug] POST   /api/products/info        --> main.main.func42 (5 handlers)
+[GIN-debug] PUT    /api/products/edit        --> main.main.func43 (5 handlers)
+[GIN-debug] PUT    /api/products/activate    --> main.main.func44 (5 handlers)
+[GIN-debug] PUT    /api/products/deactivate  --> main.main.func45 (5 handlers)
+[GIN-debug] DELETE /api/products/delete      --> main.main.func46 (5 handlers)
+[GIN-debug] POST   /api/products/product_category_products --> main.main.func47 (5 handlers)
+[GIN-debug] GET    /api/orders/all           --> main.main.func48 (5 handlers)
+[GIN-debug] GET    /api/orders/finished      --> main.main.func49 (5 handlers)
+[GIN-debug] GET    /api/orders/not_finished  --> main.main.func50 (5 handlers)
+[GIN-debug] POST   /api/orders/add           --> main.main.func51 (5 handlers)
+[GIN-debug] POST   /api/orders/change_state  --> main.main.func52 (5 handlers)
+[GIN-debug] POST   /api/orders/info          --> main.main.func53 (5 handlers)
+[GIN-debug] PUT    /api/orders/edit          --> main.main.func54 (5 handlers)
+[GIN-debug] DELETE /api/orders/delete        --> main.main.func55 (5 handlers)
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [22 Feb 23 04:51 EET] POST /api/store_categories/add_store_category 200 22.5294ms 
-::1 - [22 Feb 23 04:51 EET] POST /api/store_categories/add_store_category 200 8.9794ms 
-::1 - [22 Feb 23 04:51 EET] POST /api/store_categories/add_store_category 200 14.388ms 
-::1 - [22 Feb 23 04:51 EET] POST /api/stores/add_store 200 28.5494ms 
-::1 - [22 Feb 23 04:51 EET] POST /api/stores/add_store 200 12.4518ms 
-::1 - [22 Feb 23 04:52 EET] POST /api/stores/add_store 200 8.6483ms 
-::1 - [22 Feb 23 04:52 EET] GET /api/stores/get_stores 200 14.9786ms 
-::1 - [22 Feb 23 04:52 EET] POST /api/stores/add_store 400 13.7896ms 
-::1 - [22 Feb 23 04:54 EET] PUT /api/stores/edit_store 200 8.8486ms 
-::1 - [22 Feb 23 04:54 EET] GET /api/stores/get_stores 200 13.0078ms 
-::1 - [22 Feb 23 04:55 EET] GET /api/stores/get_stores 200 10.4352ms 
-::1 - [22 Feb 23 04:55 EET] DELETE /api/stores/delete_store 200 7.5304ms 
-::1 - [22 Feb 23 04:55 EET] GET /api/stores/get_stores 200 7.3515ms 
-::1 - [22 Feb 23 04:55 EET] DELETE /api/stores/delete_store 400 10.3458ms 
+::1 - [01 Mar 23 01:52 EET] POST /api/users/user_circles 200 9.942ms 
+::1 - [01 Mar 23 01:52 EET] POST /api/orders/add 200 10.0725ms 
+::1 - [01 Mar 23 01:52 EET] POST /api/orders/change_state 200 8.0202ms 
+::1 - [01 Mar 23 01:52 EET] POST /api/users/user_circles 200 8.6723ms 
+::1 - [01 Mar 23 01:52 EET] POST /api/users/user_circles 200 9.2303ms 

@@ -19,6 +19,7 @@ type UserController interface {
 	DeleteUser(ctx *gin.Context) error
 	UserAddAddress(ctx *gin.Context) error
 	UserAddressesList(ctx *gin.Context) ([]entity.Address, error)
+	UserCircles(ctx *gin.Context) (entity.UserCirclesResponse, error)
 }
 
 type userController struct {
@@ -144,4 +145,15 @@ func (c *userController) UserAddAddress(ctx *gin.Context) error {
 		return err
 	}*/
 	return err
+}
+
+func (c *userController) UserCircles(ctx *gin.Context) (entity.UserCirclesResponse, error) {
+
+	var addressUserID entity.UserInfoRequest
+	err := ctx.ShouldBindJSON(&addressUserID)
+	if err != nil {
+		return entity.UserCirclesResponse{}, err
+	}
+	circles, err := c.service.UserCircles(addressUserID)
+	return circles, err
 }

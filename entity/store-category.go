@@ -15,7 +15,7 @@ type StoreCategoryDeleteRequest struct {
 }
 
 type StoreCategoryEditRequest struct {
-	ID     int    `json:"id" binding:"required"`
-	Name   string `json:"name"`
-	Active bool   `json:"active"`
+	ID   int    `json:"id" binding:"required"`
+	Name string `json:"name" binding:"required"`
+	// Active bool   `json:"active"` // binding:"required"
 }

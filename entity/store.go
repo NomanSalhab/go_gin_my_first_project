@@ -7,6 +7,7 @@ type Store struct {
 	Image           string  `json:"image" binding:"required"`
 	Balance         float32 `json:"balance"`
 	Active          bool    `json:"active"`
+	DeliveryRent    int     `json:"delivery_rent"`
 }
 
 type StoreInfoRequest struct {
@@ -19,7 +20,8 @@ type StoreEditRequest struct {
 	StoreCategoryId int     `json:"store_category_id"`
 	Image           string  `json:"image"`
 	Balance         float32 `json:"balance"`
-	Active          bool    `json:"active"`
+	DeliveryRent    int     `json:"delivery_rent"`
+	// Active          bool    `json:"active"` binding:"required"
 }
 
 type StoreDeleteRequest struct {

@@ -15,6 +15,9 @@ type UserService interface {
 	DeleteUser(user entity.UserInfoRequest) error
 	FindUserAddresses(addressUserId entity.UserAddressesRequest) ([]entity.Address, error)
 	UserAddAddress(addedAddress entity.AddAddressRequest) error
+	UserCircles(addressUserId entity.UserInfoRequest) (entity.UserCirclesResponse, error)
+
+	AddMockUsers(users []entity.User)
 }
 
 type userService struct {
@@ -49,19 +52,16 @@ func (service *userService) FindAll() []entity.User {
 func (service *userService) FindUser(id entity.UserInfoRequest) (entity.User, error) {
 	users := service.FindAll()
 	var user entity.User
-	for i := 0; i < len(users) && len(users) != 0; i++ {
-		if id.ID != 0 {
+	if id.ID != 0 {
+		for i := 0; i < len(users) && len(users) != 0; i++ {
 			if users[i].ID == id.ID {
 				user = users[i]
 			}
-		} else {
-			return user, errors.New("user id cannot be zero")
 		}
-	}
-	if id.ID == 0 {
+	} else {
 		return user, errors.New("user id cannot be zero")
 	}
-	if /*user.ID == 0 || */ user.Name == "" {
+	if user.Name == "" {
 		return user, errors.New("the user couldn't be found")
 	}
 	return user, nil
@@ -70,14 +70,14 @@ func (service *userService) FindUser(id entity.UserInfoRequest) (entity.User, er
 func (service *userService) FindUserAddresses(addressUserId entity.UserAddressesRequest) ([]entity.Address, error) {
 	users := service.FindAll()
 	var addresses []entity.Address
-	for i := 0; i < len(users) && len(users) != 0; i++ {
-		if addressUserId.UserId != 0 {
+	if addressUserId.UserId != 0 {
+		for i := 0; i < len(users) && len(users) != 0; i++ {
 			if users[i].ID == addressUserId.UserId {
 				addresses = users[i].Addresses
 			}
-		} else {
-			return addresses, errors.New("user id cannot be zero")
 		}
+	} else {
+		return addresses, errors.New("user id cannot be zero")
 	}
 	if len(addresses) == 0 {
 		return addresses, errors.New("no addresses yet")
@@ -93,8 +93,8 @@ func (service *userService) UserAddAddress(addedAddress entity.AddAddressRequest
 		Latitude:  addedAddress.Latitude,
 		Longitude: addedAddress.Longitude,
 	}
-	for i := 0; i < len(users) && len(users) != 0; i++ {
-		if addedAddress.UserId != 0 {
+	if addedAddress.UserId != 0 {
+		for i := 0; i < len(users) && len(users) != 0; i++ {
 			if users[i].ID == addedAddress.UserId {
 				if len(users[i].Addresses) > 0 {
 					address.ID = users[i].Addresses[len(users[i].Addresses)-1].ID + 1
@@ -108,30 +108,52 @@ func (service *userService) UserAddAddress(addedAddress entity.AddAddressRequest
 					return errors.New("failed to add the address")
 				}
 			}
-		} else {
-			return errors.New("user id cannot be zero")
 		}
+	} else {
+		return errors.New("user id cannot be zero")
 	}
 	return errors.New("user is not found")
 }
 
+func (service *userService) UserCircles(userId entity.UserInfoRequest) (entity.UserCirclesResponse, error) {
+	users := service.FindAll()
+	rate := len(users)
+	index := 0
+	if userId.ID != 0 {
+		for i := 0; i < len(users) && len(users) != 0; i++ {
+			if users[i].ID == userId.ID {
+				index = i
+			}
+		}
+		for i := 0; i < len(users) && len(users) != 0; i++ {
+			if users[i].Circles <= users[index].Circles && users[i].ID != users[index].ID {
+				rate--
+			}
+		}
+		if index < len(users) {
+			return entity.UserCirclesResponse{
+				Circles: users[index].Circles,
+				Rate:    rate,
+			}, nil
+		}
+	} else {
+		return entity.UserCirclesResponse{}, errors.New("user id cannot be zero")
+	}
+	return entity.UserCirclesResponse{}, errors.New("user could not be found")
+}
+
 func (service *userService) LoginUser(userAuth entity.UserLoginRequest) (entity.User, error) {
 	users := service.FindAll()
-	var user entity.User
 	for i := 0; i < len(users) && len(users) != 0; i++ {
 		if users[i].Phone == userAuth.Phone {
 			if users[i].Password == userAuth.Password {
-				user = users[i]
 				return users[i], nil
 			} else {
-				return user, errors.New("password is wrong")
+				return entity.User{}, errors.New("password is wrong")
 			}
 		}
 	}
-	if user.Name == "" {
-		return user, errors.New("phone number is wrong")
-	}
-	return user, errors.New("failed")
+	return entity.User{}, errors.New("phone number is wrong")
 }
 
 func (service *userService) EditUser(user entity.UserEditRequest) error {
@@ -148,44 +170,40 @@ func (service *userService) EditUser(user entity.UserEditRequest) error {
 				if user.Balance != 0 {
 					users[i].Balance = user.Balance
 				}
+				if user.Role != 0 {
+					users[i].Role = user.Role
+				}
 
 				if user.Password != "" {
 					users[i].Password = user.Password
 				}
-				/*users[i] = entity.User{
-					ID:        user.ID,
-					Name:      user.Name,
-					Phone:     user.Phone,
-					Password:  user.Password,
-					Addresses: user.Addresses,
-					Balance:   user.Balance,
-				}*/
+				users[i].Active = user.Active
 				return nil
 			}
 		}
 	}
-	// if /*user.ID == 0 || */ user.Name == "" {
-	// 	return errors.New("the user couldn't be found")
-	// }
 	return errors.New("user could not be found")
 }
 
 func (service *userService) DeleteUser(user entity.UserInfoRequest) error {
 	users := service.FindAll()
 	var tempUsers []entity.User
-	if user.ID == 0 {
-		return errors.New("user id cannot be zero")
-	}
-	for i := 0; i < len(users) && len(users) != 0; i++ {
-		if user.ID != 0 {
+	if user.ID != 0 {
+		for i := 0; i < len(users) && len(users) != 0; i++ {
 			if users[i].ID != user.ID {
 				tempUsers = append(tempUsers, users[i])
 			}
 		}
+	} else {
+		return errors.New("user id cannot be zero")
 	}
 	if len(users) != len(tempUsers)+1 {
 		return errors.New("user could not be found")
 	}
 	service.users = tempUsers
 	return nil
+}
+
+func (service *userService) AddMockUsers(users []entity.User) {
+	service.users = append(service.users, users...)
 }
