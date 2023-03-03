@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 )
@@ -98,6 +99,7 @@ func (service *orderService) EditOrder(orderEditInfo entity.OrderEditRequest) er
 			if orders[i].ID == orderEditInfo.ID {
 				if orderEditInfo.Finished {
 					orders[i].Finished = true
+					orders[i].DeliveryTime = time.Now()
 				}
 				if orderEditInfo.State.Text != "" {
 					orders[i].State = entity.OrderState{
