@@ -54,6 +54,7 @@ func (c *productController) AddProduct(ctx *gin.Context, cst ProductCategoryCont
 		if productCategories[i].ID == product.ProductCategoryId {
 			for i := 0; i < len(stores); i++ {
 				if stores[i].ID == product.StoreId {
+
 					err = c.service.AddProduct(product)
 					return err
 				}

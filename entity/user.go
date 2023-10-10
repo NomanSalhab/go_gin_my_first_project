@@ -1,15 +1,16 @@
 package entity
 
 type User struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name" binding:"required"`     /*,min:6,max=50" validate:"is-full-name*/
-	Phone     string    `json:"phone" binding:"required"`    /*,min=10,max=10*/
-	Password  string    `json:"password" binding:"required"` /*,min=8*/
-	Addresses []Address `json:"addresses"`
-	Balance   int       `json:"balance"`
-	Active    bool      `json:"active"`
-	Circles   int       `json:"circles"`
-	Role      int       `json:"role"`
+	ID       int    `json:"id"`
+	Name     string `json:"name" binding:"required"`     /*,min:6,max=50" validate:"is-full-name*/
+	Phone    string `json:"phone" binding:"required"`    /*,min=10,max=10*/
+	Password string `json:"password" binding:"required"` /*,min=8*/
+	// Addresses []Address `json:"addresses"`
+	Balance      int     `json:"balance"`
+	Active       bool    `json:"active"`
+	Circles      int     `json:"circles"`
+	Role         int     `json:"role"` //? 0: Customer, 1: Delivery, 2: Admin
+	UserDiscount float32 `json:"user_discount"`
 }
 
 type UserInfoRequest struct {

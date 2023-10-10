@@ -91,15 +91,15 @@ func (c *productCategoryController) EditProductCategory(ctx *gin.Context, sc Sto
 		return err
 	}
 
-	stores := sc.FindAllStores()
-	fmt.Println("Store Id:", productCategoryEditInfo.StoreId, "Stores Length:", len(stores))
-	for i := 0; i < len(stores); i++ {
-		if stores[i].ID == productCategoryEditInfo.StoreId {
-			err = c.service.EditProductCategory(productCategoryEditInfo)
-			return err
-		}
-	}
-	return errors.New("store does not exist")
+	// stores := sc.FindAllStores()
+	// fmt.Println("Store Id:", productCategoryEditInfo.StoreId, "Stores Length:", len(stores))
+	// for i := 0; i < len(stores); i++ {
+	// if stores[i].ID == productCategoryEditInfo.StoreId {
+	err = c.service.EditProductCategory(productCategoryEditInfo)
+	return err
+	// }
+	// }
+	// return errors.New("store does not exist")
 }
 
 func (c *productCategoryController) ActivateProductCategory(ctx *gin.Context) error {
@@ -170,7 +170,8 @@ func (c *productCategoryController) GetProductCategoriesByStore(ctx *gin.Context
 			if len(storeProductCategories) > 0 {
 				return storeProductCategories, nil
 			} else {
-				return storeProductCategories, errors.New("store does not have any product categories")
+				return make([]entity.ProductCategory, 0), nil
+				// return storeProductCategories, errors.New("store does not have any product categories")
 			}
 		}
 	}

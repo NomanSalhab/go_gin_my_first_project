@@ -18,8 +18,8 @@ type ProductCategoriesByStoreInfoRequest struct {
 type ProductCategoryEditRequest struct {
 	ID      int    `json:"id" binding:"required"`
 	Name    string `json:"name"`
-	StoreId int    `json:"store_id" binding:"required"`
-	Active  bool   `json:"active"` // binding:"required"
+	StoreId int    `json:"store_id"` //  binding:"required"
+	Active  bool   `json:"active"`   // binding:"required"
 }
 
 type ProductCategoryDeleteRequest struct {

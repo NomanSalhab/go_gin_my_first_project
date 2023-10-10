@@ -12,14 +12,19 @@ import (
 
 type UserController interface {
 	FindAllUsers() []entity.User
+	FindActiveUsers() []entity.User
+	FindNotActiveUsers() []entity.User
 	SaveUser(ctx *gin.Context) error
-	FindUser(ctx *gin.Context) (entity.User, error)
+	FindUser(ctx *gin.Context, sentId int) (entity.User, error)
 	LoginUser(ctx *gin.Context) (entity.User, error)
 	EditUser(ctx *gin.Context) error
 	DeleteUser(ctx *gin.Context) error
 	UserAddAddress(ctx *gin.Context) error
-	UserAddressesList(ctx *gin.Context) ([]entity.Address, error)
-	UserCircles(ctx *gin.Context) (entity.UserCirclesResponse, error)
+	UserDeleteAddress(ctx *gin.Context) error
+	UserAddressesList(ctx *gin.Context, sentId int) ([]entity.Address, error)
+	UserCircles(ctx *gin.Context, sentId int) (entity.UserCirclesResponse, error)
+	ActivateUser(ctx *gin.Context) error
+	DeactivateUser(ctx *gin.Context) error
 }
 
 type userController struct {
@@ -40,6 +45,14 @@ func (c *userController) FindAllUsers() []entity.User {
 	return c.service.FindAll()
 }
 
+func (c *userController) FindActiveUsers() []entity.User {
+	return c.service.FindActiveUsers()
+}
+
+func (c *userController) FindNotActiveUsers() []entity.User {
+	return c.service.FindNotActiveUsers()
+}
+
 func (c *userController) SaveUser(ctx *gin.Context) error {
 	var user entity.User
 	err := ctx.ShouldBindJSON(&user)
@@ -52,25 +65,43 @@ func (c *userController) SaveUser(ctx *gin.Context) error {
 		return err
 	}
 
-	if c.service.Save(user).Phone == "" {
-		return errors.New("user phone number is already registered")
+	err = c.service.Save(user)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (c *userController) FindUser(ctx *gin.Context) (entity.User, error) {
+func (c *userController) FindUser(ctx *gin.Context, sentId int) (entity.User, error) {
 
-	var userId entity.UserInfoRequest
-	var user entity.User
-	err := ctx.ShouldBindJSON(&userId)
-	if err != nil {
-		return user, err
+	if sentId == 0 {
+		var user entity.User
+		return user, errors.New("user id cannot be zero")
+		// var userId entity.UserInfoRequest
+		// err := ctx.ShouldBindJSON(&userId)
+		// if err != nil {
+		// 	return user, err
+		// }
+		// user, err = c.service.FindUser(userId)
+		// if err != nil {
+		// 	return user, err
+		// }
+		// return user, nil
+	} else {
+		userId := entity.UserInfoRequest{
+			ID: sentId,
+		}
+		var user entity.User
+		// err := ctx.ShouldBindJSON(&userId)
+		// if err != nil {
+		// 	return user, err
+		// }
+		user, err := c.service.FindUser(userId)
+		if err != nil {
+			return user, err
+		}
+		return user, nil
 	}
-	user, err = c.service.FindUser(userId)
-	if err != nil {
-		return user, err
-	}
-	return user, nil
 }
 
 func (c *userController) LoginUser(ctx *gin.Context) (entity.User, error) {
@@ -103,6 +134,40 @@ func (c *userController) EditUser(ctx *gin.Context) error {
 	return nil
 }
 
+func (c *userController) ActivateUser(ctx *gin.Context) error {
+	var userId entity.UserInfoRequest
+	err := ctx.ShouldBindJSON(&userId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(userId)
+	if err != nil {
+		return err
+	}
+	err = c.service.ActivateUser(userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *userController) DeactivateUser(ctx *gin.Context) error {
+	var userId entity.UserInfoRequest
+	err := ctx.ShouldBindJSON(&userId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(userId)
+	if err != nil {
+		return err
+	}
+	err = c.service.DeactivateUser(userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *userController) DeleteUser(ctx *gin.Context) error {
 
 	// var userId entity.UserInfoRequest
@@ -118,15 +183,17 @@ func (c *userController) DeleteUser(ctx *gin.Context) error {
 	return nil
 }
 
-func (c *userController) UserAddressesList(ctx *gin.Context) ([]entity.Address, error) {
+func (c *userController) UserAddressesList(ctx *gin.Context, sentId int) ([]entity.Address, error) {
 
-	var addressUserID entity.UserAddressesRequest
-	var address []entity.Address
-	err := ctx.ShouldBindJSON(&addressUserID)
-	if err != nil {
-		return address, err
+	addressUserID := entity.UserAddressesRequest{
+		UserId: sentId,
 	}
-	address, err = c.service.FindUserAddresses(addressUserID)
+	var address []entity.Address
+	// err := ctx.ShouldBindJSON(&addressUserID)
+	// if err != nil {
+	// 	return address, err
+	// }
+	address, err := c.service.FindUserAddresses(addressUserID)
 	if err != nil {
 		return address, err
 	}
@@ -147,13 +214,29 @@ func (c *userController) UserAddAddress(ctx *gin.Context) error {
 	return err
 }
 
-func (c *userController) UserCircles(ctx *gin.Context) (entity.UserCirclesResponse, error) {
+func (c *userController) UserDeleteAddress(ctx *gin.Context) error {
 
-	var addressUserID entity.UserInfoRequest
-	err := ctx.ShouldBindJSON(&addressUserID)
+	var addressInfo entity.UserDeleteAddressRequest
+	err := ctx.ShouldBindJSON(&addressInfo)
 	if err != nil {
-		return entity.UserCirclesResponse{}, err
+		return err
 	}
+	err = c.service.UserDeleteAddress(addressInfo)
+	/*if err != nil {
+		return err
+	}*/
+	return err
+}
+
+func (c *userController) UserCircles(ctx *gin.Context, sentId int) (entity.UserCirclesResponse, error) {
+
+	addressUserID := entity.UserInfoRequest{
+		ID: sentId,
+	}
+	// err := ctx.ShouldBindJSON(&addressUserID)
+	// if err != nil {
+	// 	return entity.UserCirclesResponse{}, err
+	// }
 	circles, err := c.service.UserCircles(addressUserID)
 	return circles, err
 }

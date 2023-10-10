@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/NomanSalhab/go_gin_my_first_project/driver"
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 )
 
@@ -29,129 +30,184 @@ func NewStoreCategoryService() StoreCategoryService {
 }
 
 func (service *storeCategoryService) AddStoreCategory(storeCategory entity.StoreCategory) error {
-	successStoreCategory := storeCategory
-	for i := 0; i < len(service.storeCategories); i++ {
-		if service.storeCategories[i].Name == storeCategory.Name {
-			return errors.New("store category already exisists")
+	storeCategoriesList, err := driver.FindAllStoreCategories()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(storeCategoriesList); i++ {
+		if storeCategoriesList[i].Name == storeCategory.Name {
+			return errors.New("store category name already exists")
 		}
 	}
-	if len(service.storeCategories) > 0 {
-		successStoreCategory.ID = service.storeCategories[len(service.storeCategories)-1].ID + 1
-	} else {
-		successStoreCategory.ID = 1
+	err = driver.AddStoreCategory(storeCategory)
+	if err != nil {
+		return err
 	}
-	service.storeCategories = append(service.storeCategories, successStoreCategory)
 	return nil
+	// successStoreCategory := storeCategory
+	// for i := 0; i < len(service.storeCategories); i++ {
+	// 	if service.storeCategories[i].Name == storeCategory.Name {
+	// 		return errors.New("store category already exisists")
+	// 	}
+	// }
+	// if len(service.storeCategories) > 0 {
+	// 	successStoreCategory.ID = service.storeCategories[len(service.storeCategories)-1].ID + 1
+	// } else {
+	// 	successStoreCategory.ID = 1
+	// }
+	// service.storeCategories = append(service.storeCategories, successStoreCategory)
+	// return nil
 }
 
 func (service *storeCategoryService) FindAllStoreCategories() []entity.StoreCategory {
-	return service.storeCategories
+	allStoreCategories, err := driver.FindAllStoreCategories()
+	if err != nil {
+		return make([]entity.StoreCategory, 0)
+	}
+	return allStoreCategories
+	// return service.storeCategories
 }
 
 func (service *storeCategoryService) FindActiveStoreCategories() []entity.StoreCategory {
-	var activeStoreCategories []entity.StoreCategory
-	for i := 0; i < len(service.storeCategories); i++ {
-		if service.storeCategories[i].Active {
-			activeStoreCategories = append(activeStoreCategories, service.storeCategories[i])
-		}
+	activeStoreCategories, err := driver.FindActiveStoreCategories()
+	if err != nil {
+		return make([]entity.StoreCategory, 0)
 	}
 	return activeStoreCategories
+	// var activeStoreCategories []entity.StoreCategory
+	// for i := 0; i < len(service.storeCategories); i++ {
+	// 	if service.storeCategories[i].Active {
+	// 		activeStoreCategories = append(activeStoreCategories, service.storeCategories[i])
+	// 	}
+	// }
+	// return activeStoreCategories
 }
 
 func (service *storeCategoryService) FindNotActiveStoreCategories() []entity.StoreCategory {
-	var notActiveStoreCategories []entity.StoreCategory
-	for i := 0; i < len(service.storeCategories); i++ {
-		if !service.storeCategories[i].Active {
-			notActiveStoreCategories = append(notActiveStoreCategories, service.storeCategories[i])
-		}
+	notActiveStoreCategories, err := driver.FindNotActiveStoreCategories()
+	if err != nil {
+		return make([]entity.StoreCategory, 0)
 	}
 	return notActiveStoreCategories
+	// var notActiveStoreCategories []entity.StoreCategory
+	// for i := 0; i < len(service.storeCategories); i++ {
+	// 	if !service.storeCategories[i].Active {
+	// 		notActiveStoreCategories = append(notActiveStoreCategories, service.storeCategories[i])
+	// 	}
+	// }
+	// return notActiveStoreCategories
 }
 
 func (service *storeCategoryService) FindStoreCategory(id entity.StoreCategoryInfoRequest) (entity.StoreCategory, error) {
-	storeCategories := service.FindAllStoreCategories()
-	var storeCategory entity.StoreCategory
-	for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
-		if id.ID != 0 {
-			if storeCategories[i].ID == id.ID {
-				storeCategory = storeCategories[i]
-				return storeCategory, nil
-			}
-		} else {
-			return storeCategory, errors.New("store category id cannot be zero")
-		}
+	storeCategory, _ := driver.FindStoreCategory(id.ID)
+	if storeCategory.Name == "" {
+		return storeCategory, errors.New("the store category couldn't be found")
 	}
-	return storeCategory, errors.New("the store category couldn't be found")
+	return storeCategory, nil
+	// storeCategories := service.FindAllStoreCategories()
+	// var storeCategory entity.StoreCategory
+	// for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
+	// 	if id.ID != 0 {
+	// 		if storeCategories[i].ID == id.ID {
+	// 			storeCategory = storeCategories[i]
+	// 			return storeCategory, nil
+	// 		}
+	// 	} else {
+	// 		return storeCategory, errors.New("store category id cannot be zero")
+	// 	}
+	// }
+	// return storeCategory, errors.New("the store category couldn't be found")
 }
 
 func (service *storeCategoryService) EditStoreCategory(storeCategoryEditInfo entity.StoreCategoryEditRequest) error {
-	storeCategories := service.FindAllStoreCategories()
-	var storeCategory entity.StoreCategory
-	for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
-		if storeCategoryEditInfo.ID != 0 {
-			if storeCategories[i].ID == storeCategoryEditInfo.ID {
-				storeCategory.ID = storeCategoryEditInfo.ID
-				storeCategories[i].Name = storeCategoryEditInfo.Name
-				return nil
-			}
-		} else {
-			return errors.New("store category id cannot be zero")
-		}
+	_, err := driver.EditStoreCategory(storeCategoryEditInfo)
+	if err != nil {
+		return err
 	}
-	return errors.New("the store category couldn't be found")
+	return nil
+	// storeCategories := service.FindAllStoreCategories()
+	// var storeCategory entity.StoreCategory
+	// for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
+	// 	if storeCategoryEditInfo.ID != 0 {
+	// 		if storeCategories[i].ID == storeCategoryEditInfo.ID {
+	// 			storeCategory.ID = storeCategoryEditInfo.ID
+	// 			storeCategories[i].Name = storeCategoryEditInfo.Name
+	// 			storeCategories[i].Active = storeCategoryEditInfo.Active
+	// 			return nil
+	// 		}
+	// 	} else {
+	// 		return errors.New("store category id cannot be zero")
+	// 	}
+	// }
+	// return errors.New("the store category couldn't be found")
 }
 
 func (service *storeCategoryService) ActivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
-	storeCategories := service.FindAllStoreCategories()
-	var storeCategory entity.StoreCategory
-	for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
-		if storeCategoryEditInfo.ID != 0 {
-			if storeCategories[i].ID == storeCategoryEditInfo.ID {
-				storeCategory.ID = storeCategoryEditInfo.ID
-				storeCategories[i].Active = true
-				return nil
-			}
-		} else {
-			return errors.New("store category id cannot be zero")
-		}
+	err := driver.ActivateStoreCategory(storeCategoryEditInfo)
+	if err != nil {
+		return err
 	}
-	return errors.New("the store category couldn't be found")
+	return nil
+	// storeCategories := service.FindAllStoreCategories()
+	// var storeCategory entity.StoreCategory
+	// for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
+	// 	if storeCategoryEditInfo.ID != 0 {
+	// 		if storeCategories[i].ID == storeCategoryEditInfo.ID {
+	// 			storeCategory.ID = storeCategoryEditInfo.ID
+	// 			storeCategories[i].Active = true
+	// 			return nil
+	// 		}
+	// 	} else {
+	// 		return errors.New("store category id cannot be zero")
+	// 	}
+	// }
+	// return errors.New("the store category couldn't be found")
 }
 
 func (service *storeCategoryService) DeactivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
-	storeCategories := service.FindAllStoreCategories()
-	var storeCategory entity.StoreCategory
-	for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
-		if storeCategoryEditInfo.ID != 0 {
-			if storeCategories[i].ID == storeCategoryEditInfo.ID {
-				storeCategory.ID = storeCategoryEditInfo.ID
-				storeCategories[i].Active = false
-				return nil
-			}
-		} else {
-			return errors.New("store category id cannot be zero")
-		}
+	err := driver.DeactivateStoreCategory(storeCategoryEditInfo)
+	if err != nil {
+		return err
 	}
-	return errors.New("the store category couldn't be found")
+	return nil
+	// storeCategories := service.FindAllStoreCategories()
+	// var storeCategory entity.StoreCategory
+	// for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
+	// 	if storeCategoryEditInfo.ID != 0 {
+	// 		if storeCategories[i].ID == storeCategoryEditInfo.ID {
+	// 			storeCategory.ID = storeCategoryEditInfo.ID
+	// 			storeCategories[i].Active = false
+	// 			return nil
+	// 		}
+	// 	} else {
+	// 		return errors.New("store category id cannot be zero")
+	// 	}
+	// }
+	// return errors.New("the store category couldn't be found")
 }
 
 func (service *storeCategoryService) DeleteStoreCategory(storeCategoryDeleteInfo entity.StoreCategoryDeleteRequest) error {
-	storeCategories := service.FindAllStoreCategories()
-	var tempStoreCategory []entity.StoreCategory
-	for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
-		if storeCategoryDeleteInfo.ID != 0 {
-			if storeCategories[i].ID != storeCategoryDeleteInfo.ID {
-				tempStoreCategory = append(tempStoreCategory, storeCategories[i])
-			}
-		} else {
-			return errors.New("id cannot be zero")
-		}
+	err := driver.DeleteStoreCategory(storeCategoryDeleteInfo.ID)
+	if err != nil {
+		return err
 	}
-	if len(storeCategories) != (len(tempStoreCategory) + 1) {
-		return errors.New("category could not be found")
-	}
-	service.storeCategories = tempStoreCategory
 	return nil
+	// storeCategories := service.FindAllStoreCategories()
+	// var tempStoreCategory []entity.StoreCategory
+	// for i := 0; i < len(storeCategories) && len(storeCategories) != 0; i++ {
+	// 	if storeCategoryDeleteInfo.ID != 0 {
+	// 		if storeCategories[i].ID != storeCategoryDeleteInfo.ID {
+	// 			tempStoreCategory = append(tempStoreCategory, storeCategories[i])
+	// 		}
+	// 	} else {
+	// 		return errors.New("id cannot be zero")
+	// 	}
+	// }
+	// if len(storeCategories) != (len(tempStoreCategory) + 1) {
+	// 	return errors.New("category could not be found")
+	// }
+	// service.storeCategories = tempStoreCategory
+	// return nil
 }
 
 func (service *storeCategoryService) AddMockStoreCategories(storeCategories []entity.StoreCategory) {

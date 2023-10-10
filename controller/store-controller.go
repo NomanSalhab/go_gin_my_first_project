@@ -12,7 +12,7 @@ import (
 type StoreController interface {
 	FindAllStores() []entity.Store
 	AddStore(ctx *gin.Context, cst StoreCategoryController) error
-	FindActiveStores() []entity.Store
+	FindActiveStores(ctx *gin.Context) []entity.Store
 	FindNotActiveStores() []entity.Store
 	GetStoreById(ctx *gin.Context) (entity.Store, error)
 	EditStore(ctx *gin.Context, cst StoreCategoryController) error
@@ -61,8 +61,13 @@ func (c *storeController) AddStore(ctx *gin.Context, cst StoreCategoryController
 	return errors.New("store category does not exist")
 }
 
-func (c *storeController) FindActiveStores() []entity.Store {
-	return c.service.FindActiveStores()
+func (c *storeController) FindActiveStores(ctx *gin.Context) []entity.Store {
+	var govId entity.AreaEditRequest
+	err := ctx.ShouldBindJSON(&govId)
+	if err != nil {
+		return make([]entity.Store, 0)
+	}
+	return c.service.FindActiveStores(govId.ID)
 }
 
 func (c *storeController) FindNotActiveStores() []entity.Store {

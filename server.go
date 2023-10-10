@@ -4,29 +4,51 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/controller"
+	"github.com/NomanSalhab/go_gin_my_first_project/driver"
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 	"github.com/NomanSalhab/go_gin_my_first_project/middlewares"
 	"github.com/NomanSalhab/go_gin_my_first_project/service"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	gindump "github.com/tpkeeper/gin-dump"
 )
 
 var (
-	userService               service.UserService                  = service.NewUserService()
-	UserController            controller.UserController            = controller.NewUserController(userService)
-	storeCategoryService      service.StoreCategoryService         = service.NewStoreCategoryService()
-	StoreCategoryController   controller.StoreCategoryController   = controller.NewStoreCategoryController(storeCategoryService)
-	storeService              service.StoreService                 = service.NewStoreService()
-	StoreController           controller.StoreController           = controller.NewStoreController(storeService)
+	userDriver     driver.UserDriver         = driver.NewUserDriver()
+	userService    service.UserService       = service.NewUserService(userDriver)
+	UserController controller.UserController = controller.NewUserController(userService)
+
+	storeCategoryService    service.StoreCategoryService       = service.NewStoreCategoryService()
+	StoreCategoryController controller.StoreCategoryController = controller.NewStoreCategoryController(storeCategoryService)
+
+	storeDriver     driver.StoreDriver         = driver.NewStoreDriver()
+	storeService    service.StoreService       = service.NewStoreService(storeDriver)
+	StoreController controller.StoreController = controller.NewStoreController(storeService)
+
 	productCategortService    service.ProductCategoryService       = service.NewProductCategoryService()
 	ProductCategoryController controller.ProductCategoryController = controller.NewProductCategoryController(productCategortService)
-	productService            service.ProductService               = service.NewProductService()
-	ProductController         controller.ProductController         = controller.NewProductController(productService)
-	orderService              service.OrderService                 = service.NewOrderService()
-	OrderController           controller.OrderController           = controller.NewOrderController(orderService)
+
+	sliderService    service.SliderService       = service.NewSliderService()
+	sliderController controller.SliderController = controller.NewSliderController(sliderService)
+
+	areaService    service.AreaService       = service.NewAreaService()
+	areaController controller.AreaController = controller.NewAreaController(areaService)
+
+	detailsDriver    driver.DetailDriver         = driver.NewDetailDriver()
+	detailService    service.DetailService       = service.NewDetailService(detailsDriver)
+	detailController controller.DetailController = controller.NewDetailController(detailService)
+
+	productsDriver    driver.ProductDriver         = driver.NewProductDriver()
+	productService    service.ProductService       = service.NewProductService(productsDriver)
+	ProductController controller.ProductController = controller.NewProductController(productService)
+
+	ordersDriver    driver.OrderDriver         = driver.NewOrderDriver()
+	orderService    service.OrderService       = service.NewOrderService(ordersDriver)
+	OrderController controller.OrderController = controller.NewOrderController(orderService)
 )
 
 func setupLogOutput() {
@@ -35,102 +57,194 @@ func setupLogOutput() {
 	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 }
 
-func addMockData() {
-	var users []entity.User
-	users = append(users, entity.User{
-		ID:       1,
-		Name:     "Noman Salhab",
-		Phone:    "0992008516",
-		Password: "nomanos.net",
-		Balance:  150,
-		Active:   true,
-	})
-	users = append(users, entity.User{
-		ID:       2,
-		Name:     "Fouad Aljundi",
-		Phone:    "0936425373",
-		Password: "fouadovich.com",
-		Balance:  105,
-		Active:   true,
-	})
-	userService.AddMockUsers(users)
-	var stores []entity.Store
-	stores = append(stores, entity.Store{
-		ID:              1,
-		Name:            "The Golden Plate",
-		StoreCategoryId: 1,
-		Image:           "Image 1",
-		Balance:         250000,
-		Active:          true,
-		DeliveryRent:    3500,
-	})
-	stores = append(stores, entity.Store{
-		ID:              2,
-		Name:            "Hervy",
-		StoreCategoryId: 1,
-		Image:           "Image 2",
-		Balance:         90000,
-		Active:          true,
-		DeliveryRent:    3500,
-	})
-	storeService.AddMockStores(stores)
-	var storeCategorys []entity.StoreCategory
-	storeCategorys = append(storeCategorys, entity.StoreCategory{
-		ID:     1,
-		Name:   "Snacks",
-		Active: true,
-	})
-	storeCategorys = append(storeCategorys, entity.StoreCategory{
-		ID:     2,
-		Name:   "Super Markets",
-		Active: true,
-	})
-	storeCategoryService.AddMockStoreCategories(storeCategorys)
-	var products []entity.Product
-	products = append(products, entity.Product{
-		ID:                1,
-		Name:              "Shawrma",
-		StoreId:           1,
-		ProductCategoryId: 1,
-		Image:             "Image 3",
-		Summary:           "No Cheese",
-		Price:             7500,
-		OrderCount:        12,
-		Active:            true,
-	})
-	products = append(products, entity.Product{
-		ID:                2,
-		Name:              "Shawrma With Cheese",
-		StoreId:           2,
-		ProductCategoryId: 1,
-		Image:             "Image 4",
-		Summary:           "With Cheese",
-		Price:             9000,
-		OrderCount:        9,
-		Active:            true,
-	})
-	productService.AddMockProducts(products)
-	var productCategories []entity.ProductCategory
-	productCategories = append(productCategories, entity.ProductCategory{
-		ID:      1,
-		Name:    "Sawarma",
-		StoreId: 1,
-		Active:  true,
-	})
-	productCategories = append(productCategories, entity.ProductCategory{
-		ID:      2,
-		Name:    "Cheese",
-		StoreId: 2,
-		Active:  true,
-	})
-	productCategortService.AddMockProductCategories(productCategories)
-}
+// func getAllRows(conn *sql.DB) error {
+// 	rows, err := conn.Query("select id, user_id, delivery_time, products from orders")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer rows.Close()
+// 	var userId, id int
+// 	var deliveryTime time.Time
+// 	var products string
+// 	for rows.Next() {
+// 		err := rows.Scan(&id, &userId, &deliveryTime, &products)
+// 		if err != nil {
+// 			log.Println(err)
+// 			return err
+// 		}
+// 		fmt.Println("Record is:", userId, deliveryTime, products)
+// 		if err = rows.Err(); err != nil {
+// 			log.Fatal("error Scanning Rows!")
+// 		}
+// 		fmt.Println("------------------------")
+// 	}
+// 	return nil
+// }
+// func addMockData() {
+// 	var users []entity.User
+// 	users = append(users, entity.User{
+// 		ID:       1,
+// 		Name:     "Noman Salhab",
+// 		Phone:    "0992008516",
+// 		Password: "nomanos.net",
+// 		Balance:  150,
+// 		Active:   true,
+// 	})
+// 	users = append(users, entity.User{
+// 		ID:       2,
+// 		Name:     "Fouad Aljundi",
+// 		Phone:    "0936425373",
+// 		Password: "fouadovich.com",
+// 		Balance:  105,
+// 		Active:   false,
+// 	})
+// 	userService.AddMockUsers(users)
+// 	var storeCategorys []entity.StoreCategory
+// 	storeCategorys = append(storeCategorys, entity.StoreCategory{
+// 		ID:     1,
+// 		Name:   "Snacks",
+// 		Active: true,
+// 	})
+// 	storeCategorys = append(storeCategorys, entity.StoreCategory{
+// 		ID:     2,
+// 		Name:   "Super Markets",
+// 		Active: true,
+// 	})
+// 	storeCategoryService.AddMockStoreCategories(storeCategorys)
+// 	var stores []entity.Store
+// 	stores = append(stores, entity.Store{
+// 		ID:              1,
+// 		Name:            "The Golden Plate",
+// 		StoreCategoryId: 1,
+// 		Image:           "Image 1",
+// 		Balance:         250000,
+// 		Active:          true,
+// 		DeliveryRent:    3500,
+// 		Discount:        100,
+// 	})
+// 	stores = append(stores, entity.Store{
+// 		ID:              2,
+// 		Name:            "Hervy",
+// 		StoreCategoryId: 1,
+// 		Image:           "Image 2",
+// 		Balance:         90000,
+// 		Active:          true,
+// 		DeliveryRent:    3500,
+// 		Discount:        50,
+// 	})
+// 	storeService.AddMockStores(stores)
+// 	var productCategories []entity.ProductCategory
+// 	productCategories = append(productCategories, entity.ProductCategory{
+// 		ID:      1,
+// 		Name:    "Shawarma",
+// 		StoreId: 1,
+// 		Active:  true,
+// 	})
+// 	productCategories = append(productCategories, entity.ProductCategory{
+// 		ID:      2,
+// 		Name:    "Cheese",
+// 		StoreId: 2,
+// 		Active:  true,
+// 	})
+// 	productCategortService.AddMockProductCategories(productCategories)
+// 	var sliders []entity.Slider
+// 	sliders = append(sliders, entity.Slider{
+// 		ID:      1,
+// 		Image:   "",
+// 		StoreId: 1,
+// 		Active:  true,
+// 	})
+// 	sliders = append(sliders, entity.Slider{
+// 		ID:      2,
+// 		Image:   "",
+// 		StoreId: 2,
+// 		Active:  true,
+// 	})
+// 	sliderService.AddMockSliders(sliders)
+// 	var products []entity.Product
+// 	products = append(products, entity.Product{
+// 		ID:                1,
+// 		Name:              "Shawrma",
+// 		StoreId:           1,
+// 		ProductCategoryId: 1,
+// 		Image:             "Image 3",
+// 		Summary:           "No Cheese",
+// 		Price:             7500,
+// 		OrderCount:        12,
+// 		Active:            true,
+// 	})
+// 	products = append(products, entity.Product{
+// 		ID:                2,
+// 		Name:              "Shawrma With Cheese",
+// 		StoreId:           2,
+// 		ProductCategoryId: 2,
+// 		Image:             "Image 4",
+// 		Summary:           "With Cheese",
+// 		Price:             9000,
+// 		OrderCount:        9,
+// 		Active:            true,
+// 	})
+// 	productService.AddMockProducts(products)
+// }
 
 func main() {
 
 	setupLogOutput()
 
-	addMockData()
+	// Connect To DB
+	// conn, err := sql.Open("pgx", "host=localhost port=5432 dbname=circle_delivery_app user=postgres password=postgresqlgolangpass")
+	// if err != nil {
+	// 	log.Fatalf("Unable to connect: %v\n", err)
+	// }
+	// defer conn.Close()
+	// Test Connection
+	// err = conn.Ping()
+	// if err != nil {
+	// 	log.Fatalf("cannot Connect To Database")
+	// }
+	// Get Rows From Table
+	// err = getAllRows(conn)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// Insert A row
+	// query := `insert into users (name, phone, password, balance, active) values ($1, $2, $3, $4, $5)`
+	// _, err = conn.Exec(query, "Rahaf Salhab", "0936425377", "rahafpass", 0, true)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// Re Get Rows
+	// err = getAllRows(conn)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// Update A Row
+	// stmt := `update users set name = $1 where id = $2`
+	// _, err = conn.Exec(stmt, "Rahofeh Salhab", "3")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// Get Rows
+	// Get One Row By ID
+	// query := `select name, phone, balance, circles from users where id = $1`
+	// var name, phone string
+	// var balance, circles int
+	// row := conn.QueryRow(query, 1)
+	// err = row.Scan(&name, &phone, &balance, &circles)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Println("Query Row Returns:", name, phone, balance, circles)
+	// Delete A Row
+	// stmt := `delete from users where id = $1`
+	// _, err = conn.Exec(stmt, 4)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// Get Rows
+	// addMockData()
+
+	driver.ConnectSQL("host=localhost port=5432 dbname=circle_delivery_app user=postgres password=postgresqlgolangpass")
 
 	server := gin.New()
 	server.Use(gin.Recovery(), middlewares.Logger(),
@@ -140,6 +254,14 @@ func main() {
 	{
 		apiUsersRoutes.GET("/all", func(ctx *gin.Context) {
 			ctx.JSON(200, UserController.FindAllUsers())
+		})
+
+		apiUsersRoutes.GET("/active", func(ctx *gin.Context) {
+			ctx.JSON(200, UserController.FindActiveUsers())
+		})
+
+		apiUsersRoutes.GET("/not_active", func(ctx *gin.Context) {
+			ctx.JSON(200, UserController.FindNotActiveUsers())
 		})
 
 		apiUsersRoutes.POST("/signup", func(ctx *gin.Context) {
@@ -163,8 +285,22 @@ func main() {
 			}
 		})
 
-		apiUsersRoutes.POST("/info", func(ctx *gin.Context) {
-			user, err := UserController.FindUser(ctx)
+		// apiUsersRoutes.POST("/info", func(ctx *gin.Context) {
+		// 	user, err := UserController.FindUser(ctx, 0)
+		// 	if err != nil {
+		// 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// 	} else {
+		// 		ctx.JSON(http.StatusOK, gin.H{"message": user})
+		// 	}
+		// })
+
+		apiUsersRoutes.GET("/info/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			user, err := UserController.FindUser(ctx, idValue)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -181,8 +317,13 @@ func main() {
 			}
 		})
 
-		apiUsersRoutes.POST("/user_circles", func(ctx *gin.Context) {
-			circles, err := UserController.UserCircles(ctx)
+		apiUsersRoutes.GET("/user_circles/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			circles, err := UserController.UserCircles(ctx, idValue)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -199,8 +340,13 @@ func main() {
 			}
 		})
 
-		apiUsersRoutes.POST("/user_addresses", func(ctx *gin.Context) {
-			addresses, err := UserController.UserAddressesList(ctx)
+		apiUsersRoutes.GET("/user_addresses/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			addresses, err := UserController.UserAddressesList(ctx, idValue)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -217,12 +363,44 @@ func main() {
 			}
 		})
 
+		apiUsersRoutes.POST("/delete_address", func(ctx *gin.Context) {
+			err := UserController.UserDeleteAddress(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "address is deleted successfully"})
+			}
+		})
+
+		apiUsersRoutes.PUT("/activate", func(ctx *gin.Context) {
+			err := UserController.ActivateUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user is activated successfully"})
+			}
+		})
+
+		apiUsersRoutes.PUT("/deactivate", func(ctx *gin.Context) {
+			err := UserController.DeactivateUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user is deactivated successfully"})
+			}
+		})
 	}
 
 	apiStoreCategoriesRoutes := server.Group("/api/store_categories")
 	{
 		apiStoreCategoriesRoutes.GET("/all", func(ctx *gin.Context) {
-			ctx.JSON(200, StoreCategoryController.FindAllStoreCategories())
+			value := StoreCategoryController.FindAllStoreCategories()
+			if len(value) != 0 {
+				ctx.JSON(200, value)
+			} else {
+				ctx.JSON(200, make([]string, 0))
+			}
+
 		})
 
 		apiStoreCategoriesRoutes.GET("/active", func(ctx *gin.Context) {
@@ -289,18 +467,89 @@ func main() {
 
 	}
 
+	apiAreasRoutes := server.Group("/api/areas")
+	{
+		apiAreasRoutes.GET("/all", func(ctx *gin.Context) {
+			ctx.JSON(200, areaController.FindAllAreas())
+		})
+
+		apiAreasRoutes.GET("/active", func(ctx *gin.Context) {
+			ctx.JSON(200, areaController.FindActiveAreas())
+		})
+
+		apiAreasRoutes.GET("/not_active", func(ctx *gin.Context) {
+			ctx.JSON(200, areaController.FindNotActiveAreas())
+		})
+
+		apiAreasRoutes.POST("/activate", func(ctx *gin.Context) {
+			err := areaController.ActivateArea(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "area was activated successfully"})
+			}
+		})
+
+		apiAreasRoutes.POST("/deactivate", func(ctx *gin.Context) {
+			err := areaController.DeactivateArea(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "area was deactivated successfully"})
+			}
+		})
+
+		apiAreasRoutes.POST("/add", func(ctx *gin.Context) {
+			err := areaController.AddArea(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "area added successfully!"})
+			}
+		})
+
+		apiAreasRoutes.PUT("/edit", func(ctx *gin.Context) {
+			err := areaController.EditArea(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "area is edited successfully"})
+			}
+		})
+
+		apiAreasRoutes.DELETE("/delete", func(ctx *gin.Context) {
+			err := areaController.DeleteArea(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "area is deleted successfully"})
+			}
+		})
+
+	}
+
 	apiStoresRoutes := server.Group("/api/stores")
 	{
 		apiStoresRoutes.GET("/all", func(ctx *gin.Context) {
 			ctx.JSON(200, StoreController.FindAllStores())
 		})
 
-		apiStoresRoutes.GET("/active", func(ctx *gin.Context) {
-			ctx.JSON(200, StoreController.FindActiveStores())
+		apiStoresRoutes.POST("/active", func(ctx *gin.Context) {
+			stores := StoreController.FindActiveStores(ctx)
+			if stores == nil {
+				ctx.JSON(http.StatusOK, gin.H{"stores": make([]entity.Store, 0)})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"stores": stores})
+			}
 		})
 
 		apiStoresRoutes.GET("/not_active", func(ctx *gin.Context) {
-			ctx.JSON(200, StoreController.FindNotActiveStores())
+			stores := StoreController.FindNotActiveStores()
+			if stores == nil {
+				ctx.JSON(http.StatusOK, gin.H{"stores": make([]entity.Store, 0)})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"stores": stores})
+			}
 		})
 
 		apiStoresRoutes.POST("/add", func(ctx *gin.Context) {
@@ -438,6 +687,105 @@ func main() {
 
 	}
 
+	apiSlidersRoutes := server.Group("/api/sliders")
+	{
+		apiSlidersRoutes.GET("/all", func(ctx *gin.Context) {
+			ctx.JSON(200, sliderController.FindAllSliders())
+		})
+
+		apiSlidersRoutes.GET("/active", func(ctx *gin.Context) {
+			ctx.JSON(200, sliderController.FindActiveSliders())
+		})
+
+		apiSlidersRoutes.GET("/not_active", func(ctx *gin.Context) {
+			ctx.JSON(200, sliderController.FindNotActiveSliders())
+		})
+
+		apiSlidersRoutes.POST("/store_sliders", func(ctx *gin.Context) {
+			sliders, err := sliderController.GetSlidersByStore(ctx, StoreController)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"sliders": sliders})
+			}
+		})
+
+		apiSlidersRoutes.POST("/add", func(ctx *gin.Context) {
+			err := sliderController.AddSlider(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "slider added successfully!"})
+			}
+		})
+
+		apiSlidersRoutes.PUT("/edit", func(ctx *gin.Context) {
+			err := sliderController.EditSlider(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "product category is edited successfully"})
+			}
+		})
+
+		apiSlidersRoutes.DELETE("/delete", func(ctx *gin.Context) {
+			err := sliderController.DeleteSlider(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "slider is deleted successfully"})
+			}
+		})
+
+	}
+
+	apiDetailsRoutes := server.Group("/api/details")
+	{
+		apiDetailsRoutes.GET("/all", func(ctx *gin.Context) {
+			ctx.JSON(200, detailController.FindAllDetails())
+		})
+
+		apiDetailsRoutes.GET("/addons", func(ctx *gin.Context) {
+			ctx.JSON(200, detailController.FindAllAddons())
+		})
+
+		apiDetailsRoutes.GET("/flavors", func(ctx *gin.Context) {
+			ctx.JSON(200, detailController.FindAllFlavors())
+		})
+
+		apiDetailsRoutes.GET("/volumes", func(ctx *gin.Context) {
+			ctx.JSON(200, detailController.FindAllVolumes())
+		})
+
+		apiDetailsRoutes.POST("/add", func(ctx *gin.Context) {
+			err := detailController.AddDetail(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "detail added successfully!"})
+			}
+		})
+
+		apiDetailsRoutes.PUT("/edit", func(ctx *gin.Context) {
+			err := detailController.EditDetail(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "detail is edited successfully"})
+			}
+		})
+
+		apiDetailsRoutes.DELETE("/delete", func(ctx *gin.Context) {
+			err := detailController.DeleteDetail(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "detail is deleted successfully"})
+			}
+		})
+
+	}
+
 	apiProductsRoutes := server.Group("/api/products")
 	{
 		apiProductsRoutes.GET("/all", func(ctx *gin.Context) {
@@ -519,16 +867,94 @@ func main() {
 
 	apiOrdersRoutes := server.Group("/api/orders")
 	{
-		apiOrdersRoutes.GET("/all", func(ctx *gin.Context) {
-			ctx.JSON(200, OrderController.FindAllOrders())
+		apiOrdersRoutes.GET("/all/:page/:limit", func(ctx *gin.Context) {
+			page := ctx.Param("page")
+			limit := ctx.Param("limit")
+			pageValue, err := strconv.Atoi(page)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			limitValue, err := strconv.Atoi(limit)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			offsetValue := (pageValue - 1) * limitValue
+			allOrders, paginationInfo, err := OrderController.FindAllOrders(limitValue, offsetValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(200, gin.H{"all_orders": allOrders, "pagination_info": paginationInfo})
+			}
 		})
 
-		apiOrdersRoutes.GET("/finished", func(ctx *gin.Context) {
-			ctx.JSON(200, OrderController.FindFinishedOrders())
+		apiOrdersRoutes.GET("/finished/:page/:limit", func(ctx *gin.Context) {
+			page := ctx.Param("page")
+			limit := ctx.Param("limit")
+			pageValue, err := strconv.Atoi(page)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			limitValue, err := strconv.Atoi(limit)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			offsetValue := (pageValue - 1) * limitValue
+			finishedOrders, paginationInfo, err := OrderController.FindFinishedOrders(limitValue, offsetValue)
+
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(200, gin.H{"finished_orders": finishedOrders, "pagination_info": paginationInfo})
+			}
 		})
 
-		apiOrdersRoutes.GET("/not_finished", func(ctx *gin.Context) {
-			ctx.JSON(200, OrderController.FindNotFinishedOrders())
+		apiOrdersRoutes.GET("/not_finished/:page/:limit", func(ctx *gin.Context) {
+			page := ctx.Param("page")
+			limit := ctx.Param("limit")
+			pageValue, err := strconv.Atoi(page)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			limitValue, err := strconv.Atoi(limit)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			offsetValue := (pageValue - 1) * limitValue
+			notFinishedOrders, paginationInfo, err := OrderController.FindNotFinishedOrders(limitValue, offsetValue)
+
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(200, gin.H{"not_finished_orders": notFinishedOrders, "pagination_info": paginationInfo})
+			}
+		})
+
+		apiOrdersRoutes.GET("/user_finished/:user_id", func(ctx *gin.Context) {
+			userId := ctx.Param("user_id")
+			userIdValue, err := strconv.Atoi(userId)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			userFinishedOrders, err := OrderController.FindUserFinishedOrders(userIdValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"user_finished_orders": userFinishedOrders})
+			}
+		})
+
+		apiOrdersRoutes.GET("/user_not_finished/:user_id", func(ctx *gin.Context) {
+			userId := ctx.Param("user_id")
+			userIdValue, err := strconv.Atoi(userId)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			userNotFinishedOrders, err := OrderController.FindUserNotFinishedOrders(userIdValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"user_not_finished_orders": userNotFinishedOrders})
+			}
 		})
 
 		apiOrdersRoutes.POST("/add", func(ctx *gin.Context) {
@@ -540,26 +966,45 @@ func main() {
 			}
 		})
 
-		apiOrdersRoutes.POST("/change_state", func(ctx *gin.Context) {
-			err := OrderController.ChangeOrderState(ctx, StoreController, ProductController, UserController)
+		// apiOrdersRoutes.POST("/change_state", func(ctx *gin.Context) {
+		// 	err := OrderController.ChangeOrderState(ctx, StoreController, ProductController, UserController)
+		// 	if err != nil {
+		// 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// 	} else {
+		// 		ctx.JSON(http.StatusOK, gin.H{"message": "order added successfully!"})
+		// 	}
+		// })
+
+		apiOrdersRoutes.GET("/finish_order/:id", func(ctx *gin.Context) {
+			orderId := ctx.Param("id")
+			orderIdValue, err := strconv.Atoi(orderId)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = OrderController.FinishOrder(ctx, orderIdValue)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
-				ctx.JSON(http.StatusOK, gin.H{"message": "order added successfully!"})
+				ctx.JSON(http.StatusOK, gin.H{"message": "order finished successfully!"})
 			}
 		})
 
-		apiOrdersRoutes.POST("/info", func(ctx *gin.Context) {
-			product, err := OrderController.GetOrderById(ctx)
+		apiOrdersRoutes.GET("/info/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			order, err := OrderController.FindOrder(ctx, idValue)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
-				ctx.JSON(http.StatusOK, gin.H{"order_info": product})
+				ctx.JSON(http.StatusOK, gin.H{"order_info": order})
 			}
 		})
 
 		apiOrdersRoutes.PUT("/edit", func(ctx *gin.Context) {
-			err := OrderController.EditOrder(ctx, StoreController)
+			err := OrderController.EditOrder(ctx)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
