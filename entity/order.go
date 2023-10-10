@@ -18,6 +18,7 @@ type Order struct {
 	Ordered          bool           `json:"ordered"`
 	OnTheWay         bool           `json:"on_the_way"`
 	Finished         bool           `json:"finished"`
+	CouponID         int            `json:"coupon_id"`
 }
 
 // Addons       [][]int        `json:"addons" binding:"required"`
@@ -67,6 +68,7 @@ type OrderEditRequest struct {
 	Ordered          bool           `json:"ordered"`
 	OnTheWay         bool           `json:"on_the_way"`
 	Finished         bool           `json:"finished"`
+	CouponID         int            `json:"coupon_id"`
 }
 
 // Addons       string         `json:"addons"`

@@ -74,14 +74,14 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 		id, user_id, order_time, delivery_time, 
 		products_cost, address, 
 		delivery_cost, notes, finished, 
-		delivery_worker_id, ordered, on_the_way 
+		delivery_worker_id, ordered, on_the_way, coupon_id 
 	from orders order by order_time desc limit $1 offset $2`, pageLimit, pageOffset) // order_products,
 		if err != nil {
 			return make([]entity.Order, 0), paginationInfo, err
 		}
 		defer rows.Close()
 
-		var id, userId, productsCost, address, deliveryCost, deliveryWorkerId int
+		var id, userId, productsCost, address, deliveryCost, deliveryWorkerId, couponId int
 		var notes string
 		var finished, ordered, onTheWay bool
 		var orderTime, deliveryTime time.Time
@@ -91,7 +91,7 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 			err := rows.Scan(&id, &userId, &orderTime, &deliveryTime,
 				&productsCost, &address, // pq.Array(&orderProducts),
 				&deliveryCost, &notes, &finished,
-				&deliveryWorkerId, &ordered, &onTheWay)
+				&deliveryWorkerId, &ordered, &onTheWay, &couponId)
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
 			}
@@ -128,6 +128,7 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 				OnTheWay:         onTheWay,
 				Notes:            notes,
 				ProductsCost:     productsCost,
+				CouponID:         couponId,
 				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 			}
 			orders = append(orders, order)
@@ -142,66 +143,6 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 		paginationInfo = driver.FindPaginationInfo()
 		// fmt.Println("Orders:", orders)
 		return orders, paginationInfo, nil
-	}
-}
-
-func (driver *orderDriver) FindPaginationInfo() entity.PaginationInfo {
-	var counter int
-
-	dbConn.SQL.QueryRow("SELECT count(id) FROM orders").Scan(&counter)
-
-	if driver.cachedPageLimit != 0 {
-		// fmt.Println("we have", counter, "rows")
-		// fmt.Println("we have", int(counter/driver.cachedPageLimit), "rows")
-		return entity.PaginationInfo{
-			AllItemsCount:     counter,
-			MaximumPagesCount: int(math.Ceil(float64(counter) / float64(driver.cachedPageLimit))),
-		}
-	} else {
-		return entity.PaginationInfo{
-			AllItemsCount:     counter,
-			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
-		}
-	}
-}
-
-func (driver *orderDriver) FindFinishedPaginationInfo() entity.PaginationInfo {
-	var counter int
-
-	dbConn.SQL.QueryRow("SELECT count(id) FROM orders where finished = true").Scan(&counter)
-
-	if driver.cachedPageLimit != 0 {
-		// fmt.Println("we have", counter, "rows")
-		// fmt.Println("we have", int(counter/driver.cachedPageLimit), "rows")
-		return entity.PaginationInfo{
-			AllItemsCount:     counter,
-			MaximumPagesCount: int(math.Ceil(float64(counter) / float64(driver.cachedPageLimit))),
-		}
-	} else {
-		return entity.PaginationInfo{
-			AllItemsCount:     counter,
-			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
-		}
-	}
-}
-
-func (driver *orderDriver) FindNotFinishedPaginationInfo() entity.PaginationInfo {
-	var counter int
-
-	dbConn.SQL.QueryRow("SELECT count(id) FROM orders where finished = false").Scan(&counter)
-
-	if driver.cachedPageLimit != 0 {
-		// fmt.Println("we have", counter, "rows")
-		// fmt.Println("we have", int(counter/driver.cachedPageLimit), "rows")
-		return entity.PaginationInfo{
-			AllItemsCount:     counter,
-			MaximumPagesCount: int(math.Ceil(float64(counter) / float64(driver.cachedPageLimit))),
-		}
-	} else {
-		return entity.PaginationInfo{
-			AllItemsCount:     counter,
-			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
-		}
 	}
 }
 
@@ -861,14 +802,14 @@ func (driver *orderDriver) FindOrder(orderId int) (entity.Order, error) {
 	id, user_id,
 	order_time, delivery_time,
 	products_cost, address, delivery_cost,
-	notes, delivery_worker_id, ordered, on_the_way, finished
+	notes, delivery_worker_id, ordered, on_the_way, finished, coupon_id 
 	from orders where id = $1`, orderId) // order_products,
 	if err != nil {
 		return entity.Order{}, err
 	}
 	defer rows.Close()
 
-	var id, userId, productsCost, deliveryCost, address, deliveryWorkerId int
+	var id, userId, productsCost, deliveryCost, address, deliveryWorkerId, couponId int
 	var orderTime, deliveryTime time.Time
 	var notes string
 	var finished, ordered, onTheWay bool
@@ -879,7 +820,7 @@ func (driver *orderDriver) FindOrder(orderId int) (entity.Order, error) {
 			&orderTime, &deliveryTime, // pq.Array(&orderProducts),
 			&productsCost, &address, &deliveryCost,
 			&notes, &deliveryWorkerId,
-			&ordered, &onTheWay, &finished)
+			&ordered, &onTheWay, &finished, &couponId)
 		if err != nil {
 			return entity.Order{}, err
 		}
@@ -911,6 +852,7 @@ func (driver *orderDriver) FindOrder(orderId int) (entity.Order, error) {
 			Ordered:          ordered,
 			OnTheWay:         onTheWay,
 			DeliveryWorkerId: deliveryWorkerId,
+			CouponID:         couponId,
 		}
 		if err = rows.Err(); err != nil {
 			return entity.Order{}, err
@@ -935,14 +877,14 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 		id, user_id, order_time, delivery_time, 
 		products_cost, address, 
 		delivery_cost, notes, finished, 
-		delivery_worker_id, ordered, on_the_way 
+		delivery_worker_id, ordered, on_the_way, coupon_id  
 	from orders where finished = true order by order_time desc limit $1 offset $2`, pageLimit, pageOffset) // order_products,
 		if err != nil {
 			return make([]entity.Order, 0), paginationInfo, err
 		}
 		defer rows.Close()
 
-		var id, userId, productsCost, address, deliveryCost, deliveryWorkerId int
+		var id, userId, productsCost, address, deliveryCost, deliveryWorkerId, couponId int
 		var notes string
 		var finished, ordered, onTheWay bool
 		var orderTime, deliveryTime time.Time
@@ -952,7 +894,7 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 			err := rows.Scan(&id, &userId, &orderTime, &deliveryTime,
 				&productsCost, &address, // pq.Array(&orderProducts),
 				&deliveryCost, &notes, &finished,
-				&deliveryWorkerId, &ordered, &onTheWay)
+				&deliveryWorkerId, &ordered, &onTheWay, &couponId)
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
 			}
@@ -989,6 +931,7 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 				OnTheWay:         onTheWay,
 				Notes:            notes,
 				ProductsCost:     productsCost,
+				CouponID:         couponId,
 				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 			}
 			orders = append(orders, order)
@@ -1022,14 +965,14 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 		id, user_id, order_time, delivery_time, 
 		products_cost, address, 
 		delivery_cost, notes, finished, 
-		delivery_worker_id, ordered, on_the_way 
+		delivery_worker_id, ordered, on_the_way, coupon_id  
 	from orders where finished = false order by order_time desc limit $1 offset $2`, pageLimit, pageOffset) //order_products,
 		if err != nil {
 			return make([]entity.Order, 0), paginationInfo, err
 		}
 		defer rows.Close()
 
-		var id, userId, productsCost, address, deliveryCost, deliveryWorkerId int
+		var id, userId, productsCost, address, deliveryCost, deliveryWorkerId, couponId int
 		var notes string
 		var finished, ordered, onTheWay bool
 		var orderTime, deliveryTime time.Time
@@ -1039,7 +982,7 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 			err := rows.Scan(&id, &userId, &orderTime, &deliveryTime,
 				&productsCost, &address, // pq.Array(&orderProducts),
 				&deliveryCost, &notes, &finished,
-				&deliveryWorkerId, &ordered, &onTheWay)
+				&deliveryWorkerId, &ordered, &onTheWay, &couponId)
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
 			}
@@ -1076,6 +1019,7 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 				OnTheWay:         onTheWay,
 				Notes:            notes,
 				ProductsCost:     productsCost,
+				CouponID:         couponId,
 				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 			}
 			notFinishedOrders = append(notFinishedOrders, order)
@@ -1100,14 +1044,14 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 		id, user_id, order_time, delivery_time, 
 		products_cost, address, 
 		delivery_cost, notes, finished, 
-		delivery_worker_id, ordered, on_the_way 
+		delivery_worker_id, ordered, on_the_way, coupon_id  
 	from orders where user_id = $1 and finished = true order by order_time desc`, userWantedId) //order_products,
 	if err != nil {
 		return make([]entity.Order, 0), err
 	}
 	defer rows.Close()
 
-	var id, userId, productsCost, address, deliveryCost, deliveryWorkerId int
+	var id, userId, productsCost, address, deliveryCost, deliveryWorkerId, couponId int
 	var notes string
 	var finished, ordered, onTheWay bool
 	var orderTime, deliveryTime time.Time
@@ -1117,7 +1061,7 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 		err := rows.Scan(&id, &userId, &orderTime, &deliveryTime,
 			&productsCost, &address, // pq.Array(&orderProducts),
 			&deliveryCost, &notes, &finished,
-			&deliveryWorkerId, &ordered, &onTheWay)
+			&deliveryWorkerId, &ordered, &onTheWay, &couponId)
 		if err != nil {
 			return make([]entity.Order, 0), err
 		}
@@ -1154,6 +1098,7 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 			OnTheWay:         onTheWay,
 			Notes:            notes,
 			ProductsCost:     productsCost,
+			CouponID:         couponId,
 			Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 		}
 		orders = append(orders, order)
@@ -1177,14 +1122,14 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 		id, user_id, order_time, delivery_time, 
 		products_cost, address, 
 		delivery_cost, notes, finished, 
-		delivery_worker_id, ordered, on_the_way 
+		delivery_worker_id, ordered, on_the_way, coupon_id  
 	from orders where user_id = $1 and finished = false order by order_time desc`, userWantedId) //order_products,
 	if err != nil {
 		return make([]entity.Order, 0), err
 	}
 	defer rows.Close()
 
-	var id, userId, productsCost, address, deliveryCost, deliveryWorkerId int
+	var id, userId, productsCost, address, deliveryCost, deliveryWorkerId, couponId int
 	var notes string
 	var finished, ordered, onTheWay bool
 	var orderTime, deliveryTime time.Time
@@ -1194,7 +1139,7 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 		err := rows.Scan(&id, &userId, &orderTime, &deliveryTime,
 			&productsCost, &address, // pq.Array(&orderProducts),
 			&deliveryCost, &notes, &finished,
-			&deliveryWorkerId, &ordered, &onTheWay)
+			&deliveryWorkerId, &ordered, &onTheWay, &couponId)
 		if err != nil {
 			return make([]entity.Order, 0), err
 		}
@@ -1231,6 +1176,7 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 			OnTheWay:         onTheWay,
 			Notes:            notes,
 			ProductsCost:     productsCost,
+			CouponID:         couponId,
 			Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 		}
 		orders = append(orders, order)
@@ -1441,4 +1387,64 @@ func GetOrderDeliveryCost(order entity.Order) int {
 	fmt.Println("Stores Icrease Balance Items is:", deliveryCost)
 	fmt.Println("Stores Delivery Cost is:", deliveryCost)
 	return deliveryCost
+}
+
+func (driver *orderDriver) FindPaginationInfo() entity.PaginationInfo {
+	var counter int
+
+	dbConn.SQL.QueryRow("SELECT count(id) FROM orders").Scan(&counter)
+
+	if driver.cachedPageLimit != 0 {
+		// fmt.Println("we have", counter, "rows")
+		// fmt.Println("we have", int(counter/driver.cachedPageLimit), "rows")
+		return entity.PaginationInfo{
+			AllItemsCount:     counter,
+			MaximumPagesCount: int(math.Ceil(float64(counter) / float64(driver.cachedPageLimit))),
+		}
+	} else {
+		return entity.PaginationInfo{
+			AllItemsCount:     counter,
+			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
+		}
+	}
+}
+
+func (driver *orderDriver) FindFinishedPaginationInfo() entity.PaginationInfo {
+	var counter int
+
+	dbConn.SQL.QueryRow("SELECT count(id) FROM orders where finished = true").Scan(&counter)
+
+	if driver.cachedPageLimit != 0 {
+		// fmt.Println("we have", counter, "rows")
+		// fmt.Println("we have", int(counter/driver.cachedPageLimit), "rows")
+		return entity.PaginationInfo{
+			AllItemsCount:     counter,
+			MaximumPagesCount: int(math.Ceil(float64(counter) / float64(driver.cachedPageLimit))),
+		}
+	} else {
+		return entity.PaginationInfo{
+			AllItemsCount:     counter,
+			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
+		}
+	}
+}
+
+func (driver *orderDriver) FindNotFinishedPaginationInfo() entity.PaginationInfo {
+	var counter int
+
+	dbConn.SQL.QueryRow("SELECT count(id) FROM orders where finished = false").Scan(&counter)
+
+	if driver.cachedPageLimit != 0 {
+		// fmt.Println("we have", counter, "rows")
+		// fmt.Println("we have", int(counter/driver.cachedPageLimit), "rows")
+		return entity.PaginationInfo{
+			AllItemsCount:     counter,
+			MaximumPagesCount: int(math.Ceil(float64(counter) / float64(driver.cachedPageLimit))),
+		}
+	} else {
+		return entity.PaginationInfo{
+			AllItemsCount:     counter,
+			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
+		}
+	}
 }
