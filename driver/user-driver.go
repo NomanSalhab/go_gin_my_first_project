@@ -14,19 +14,24 @@ type UserDriver interface {
 	FindAllUsers() ([]entity.User, error)
 	FindActiveUsers() ([]entity.User, error)
 	FindNotActiveUsers() ([]entity.User, error)
+
 	FindUser(wantedId int) (entity.User, error)
 	FindUserAddresses(wantedId int) ([]entity.Address, error)
 	FindUserCircles(wantedId int) (entity.UserCirclesResponse, error)
 	FindUserRateAndCircles(wantedId int) (entity.UserCirclesResponse, error)
+
 	DeleteUser(wantedId int) error
 	AddUser(user entity.User) error
-	UserAddAddress(address entity.AddAddressRequest) error
-	UserDeleteAddress(wantedId int) error
 	LoginUser(userLoginInfo entity.UserLoginRequest) (entity.User, error)
 	EditUser(userEditInfo entity.UserEditRequest) (entity.User, error)
-	GetEditUserStatementString(userEditInfo entity.UserEditRequest) string
 	ActivateUser(userInfo entity.UserInfoRequest) error
 	DeactivateUser(userInfo entity.UserInfoRequest) error
+
+	UserAddAddress(address entity.AddAddressRequest) error
+	UserDeleteAddress(wantedId int) error
+
+	GetEditUserStatementString(userEditInfo entity.UserEditRequest) string
+
 	EditUserBalanceAndCircles(userId int, deliveryCost int, productsCost int) error
 }
 

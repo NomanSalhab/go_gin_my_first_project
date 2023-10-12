@@ -100,4 +100,6 @@
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [12 Oct 23 18:52 +03] POST /api/orders/add 200 485.916ms 
+::1 - [12 Oct 23 20:31 +03] POST /api/orders/add 200 238.9829ms 
+::1 - [12 Oct 23 20:31 +03] POST /api/orders/add 200 267.978ms 
+::1 - [12 Oct 23 20:31 +03] POST /api/orders/add 200 192.8987ms 

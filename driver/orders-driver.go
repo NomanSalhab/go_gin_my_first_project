@@ -38,6 +38,7 @@ type OrderDriver interface {
 	GetOrderProductsIDsByOrderId(orderId int) ([]int, error)
 	GetUserByIdForOrder(wantedId int) (entity.User, error)
 	GetAddOrderProductsProductsPriceAfterCoupon(productsCost int, coupon entity.CouponAddOrderRequest) int
+	GetAddOrderProductDetails(orderProduct entity.OrderProduct, productsCost int) ([]int, []int, []int, int)
 }
 
 type orderDriver struct {
@@ -531,7 +532,6 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 	storesDeliveryCost := GetOrderDeliveryCost(order)
 
 	userDeliveryCost = storesDeliveryCost - int(user.UserDiscount*float32(storesDeliveryCost))
-	// fmt.Println("Delivery Cost:", userDeliveryCost)
 
 	_, productsCost := driver.GetAddOrderProductsStatement(order.Products)
 	coupon, err := cd.GetCouponInfo(order.Coupon.ID)
@@ -563,7 +563,6 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 		userDeliveryCost, order.Notes, order.DeliveryWorkerId,
 		false, false, false, order.Coupon.ID)
 	if err != nil {
-		fmt.Println("Here2")
 		return err
 	}
 	rowsAffected, _ := result.RowsAffected()
@@ -572,23 +571,14 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 	}
 
 	lastOrderID, _ := GetLastOrderId()
-	// fmt.Println("Last Order ID:", lastOrderID)
 	for i := 0; i < len(order.Products); i++ {
 		order.Products[i].OrderId = lastOrderID
 	}
 
 	_, _, err = driver.AddOrderProducts(order.Products)
 	if err != nil {
-		fmt.Println("Here0")
 		return err
 	}
-	// op := pd.sliceToString(o)
-	// fmt.Println("Adding Order Result:", result)
-	// err = driver.AddOrderIdToOrderProducts(driver.GetTimeStamp(order.OrderTime))
-	// if err != nil {
-	// 	fmt.Println("Here3")
-	// 	return err
-	// }
 
 	driver.cacheorders = make([]entity.Order, 0)
 	return nil
@@ -627,31 +617,34 @@ func (driver *orderDriver) GetAddOrderProductsStatement(orderProducts []entity.O
 	for i := 0; i < len(orderProducts)-1; i++ {
 
 		singleProduct, _ := pd.FindProduct(orderProducts[i].ProductID)
-		orderProducts[i].ProductPrice = int(math.Ceil(float64(singleProduct.Price) * float64(1-singleProduct.DiscountRatio)))
-		productsCost = productsCost + (int(math.Ceil(float64(singleProduct.Price)*float64(1-singleProduct.DiscountRatio))) * orderProducts[i].ProductCount)
-		fmt.Println("Current Products Cose:", productsCost)
+		if orderProducts[i].ProductPrice == 0 || orderProducts[i].ProductPrice <= singleProduct.Price {
+			orderProducts[i].ProductPrice = int(math.Ceil(float64(singleProduct.Price) * float64(1-singleProduct.DiscountRatio)))
+			productsCost = productsCost + (int(math.Ceil(float64(singleProduct.Price)*float64(1-singleProduct.DiscountRatio))) * orderProducts[i].ProductCount)
+		} else {
+			productsCost = productsCost + (orderProducts[i].ProductPrice * orderProducts[i].ProductCount)
+		}
+		// fmt.Println("Products Cost:", productsCost)
 		singleStore, _ := sd.FindStore(orderProducts[i].StoreId)
 		orderProducts[i].StoreDeliveryCost = singleStore.DeliveryRent
 		orderProducts[i].StoreName = singleStore.Name
 
-		f := make([]int, 0)
-		f = append(f, orderProducts[i].Flavors.ID)
-		productsCost = productsCost + (orderProducts[i].Flavors.Price * orderProducts[i].ProductCount)
-		v := make([]int, 0)
-		v = append(v, orderProducts[i].Volumes.ID)
-		productsCost = productsCost + (orderProducts[i].Volumes.Price * orderProducts[i].ProductCount)
-		a := make([]int, 0)
-		for j := 0; j < len(orderProducts[i].Addons); j++ {
-			a = append(a, orderProducts[i].Addons[j].ID)
-			productsCost = productsCost + (orderProducts[i].Addons[j].Price * orderProducts[i].ProductCount)
-		}
-		// a = append(a, orderProducts[i].Volumes.ID)
-		flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
-		volumes := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(v))
-		addons := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(a))
+		// f := make([]int, 0)
+		// f = append(f, orderProducts[i].Flavors.ID)
+		// productsCost = productsCost + (orderProducts[i].Flavors.Price * orderProducts[i].ProductCount)
+		// v := make([]int, 0)
+		// v = append(v, orderProducts[i].Volumes.ID)
+		// productsCost = productsCost + (orderProducts[i].Volumes.Price * orderProducts[i].ProductCount)
+		// a := make([]int, 0)
+		// for j := 0; j < len(orderProducts[i].Addons); j++ {
+		// 	a = append(a, orderProducts[i].Addons[j].ID)
+		// 	productsCost = productsCost + (orderProducts[i].Addons[j].Price * orderProducts[i].ProductCount)
+		// }
+		// flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
+		// volumes := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(v))
+		// addons := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(a))
 
-		// flavorsString := sliceToString(flavors)
-		// volumesString := sliceToString(volumes)
+		var flavors, volumes, addons []int
+		flavors, volumes, addons, productsCost = driver.GetAddOrderProductDetails(orderProducts[i], productsCost)
 		addonsString := pd.sliceToString(addons) // `(` +
 		stmt = stmt + ` (` +
 			fmt.Sprint(orderProducts[i].ProductID) + ` , ` +
@@ -668,32 +661,33 @@ func (driver *orderDriver) GetAddOrderProductsStatement(orderProducts []entity.O
 	lastIndex := len(orderProducts) - 1
 
 	singleProduct, _ := pd.FindProduct(orderProducts[lastIndex].ProductID)
-	orderProducts[lastIndex].ProductPrice = int(math.Ceil(float64(singleProduct.Price) * float64(1-singleProduct.DiscountRatio)))
-	productsCost = productsCost + (int(math.Ceil(float64(singleProduct.Price)*float64(1-singleProduct.DiscountRatio))) * orderProducts[lastIndex].ProductCount)
-	// fmt.Println("Products Cost:", productsCost)
+	if orderProducts[lastIndex].ProductPrice == 0 || orderProducts[lastIndex].ProductPrice <= singleProduct.Price {
+		orderProducts[lastIndex].ProductPrice = int(math.Ceil(float64(singleProduct.Price) * float64(1-singleProduct.DiscountRatio)))
+		productsCost = productsCost + (int(math.Ceil(float64(singleProduct.Price)*float64(1-singleProduct.DiscountRatio))) * orderProducts[lastIndex].ProductCount)
+	} else {
+		productsCost = productsCost + (orderProducts[lastIndex].ProductPrice * orderProducts[lastIndex].ProductCount)
+	}
 	singleStore, _ := sd.FindStore(orderProducts[lastIndex].StoreId)
 	orderProducts[lastIndex].StoreDeliveryCost = singleStore.DeliveryRent
 	orderProducts[lastIndex].StoreName = singleStore.Name
 
-	f := make([]int, 0)
-	f = append(f, orderProducts[lastIndex].Flavors.ID)
-	productsCost = (productsCost + orderProducts[lastIndex].Flavors.Price*orderProducts[lastIndex].ProductCount)
-	v := make([]int, 0)
-	v = append(v, orderProducts[lastIndex].Volumes.ID)
-	productsCost = (productsCost + orderProducts[lastIndex].Volumes.Price*orderProducts[lastIndex].ProductCount)
-	a := make([]int, 0)
-	for j := 0; j < len(orderProducts[lastIndex].Addons); j++ {
-		a = append(a, orderProducts[lastIndex].Addons[j].ID)
-		productsCost = (productsCost + orderProducts[lastIndex].Addons[j].Price*orderProducts[lastIndex].ProductCount)
-	}
-	// a = append(a, orderProducts[lastIndex].Volumes.ID)
-	flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
-	volumes := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(v))
-	addons := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(a))
-	// addons := detailsSliceToIdSlice(GetMockDetailsSliceFormIDs(orderProducts[lastIndex].Addons))
+	// f := make([]int, 0)
+	// f = append(f, orderProducts[lastIndex].Flavors.ID)
+	// productsCost = (productsCost + orderProducts[lastIndex].Flavors.Price*orderProducts[lastIndex].ProductCount)
+	// v := make([]int, 0)
+	// v = append(v, orderProducts[lastIndex].Volumes.ID)
+	// productsCost = (productsCost + orderProducts[lastIndex].Volumes.Price*orderProducts[lastIndex].ProductCount)
+	// a := make([]int, 0)
+	// for j := 0; j < len(orderProducts[lastIndex].Addons); j++ {
+	// 	a = append(a, orderProducts[lastIndex].Addons[j].ID)
+	// 	productsCost = (productsCost + orderProducts[lastIndex].Addons[j].Price*orderProducts[lastIndex].ProductCount)
+	// }
+	// flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
+	// volumes := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(v))
+	// addons := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(a))
 
-	// flavorsString := sliceToString(flavors)
-	// volumesString := sliceToString(volumes)
+	var flavors, volumes, addons []int
+	flavors, volumes, addons, productsCost = driver.GetAddOrderProductDetails(orderProducts[lastIndex], productsCost)
 	addonsString := pd.sliceToString(addons) //  `(` +
 	stmt = stmt + ` (` + fmt.Sprint(orderProducts[lastIndex].ProductID) + ` , ` +
 		fmt.Sprint(orderProducts[lastIndex].ProductCount) + ` , ` +
@@ -707,6 +701,27 @@ func (driver *orderDriver) GetAddOrderProductsStatement(orderProducts []entity.O
 	stmt = stmt[0:len(stmt)-1] + ` returning id`
 	fmt.Println("Adding Order Products Statement", stmt)
 	return stmt, productsCost
+}
+
+func (driver *orderDriver) GetAddOrderProductDetails(orderProduct entity.OrderProduct, productsCost int) ([]int, []int, []int, int) {
+	newProductsCost := productsCost
+	f := make([]int, 0)
+	f = append(f, orderProduct.Flavors.ID)
+	newProductsCost = newProductsCost + (orderProduct.Flavors.Price * orderProduct.ProductCount)
+	v := make([]int, 0)
+	v = append(v, orderProduct.Volumes.ID)
+	newProductsCost = newProductsCost + (orderProduct.Volumes.Price * orderProduct.ProductCount)
+	a := make([]int, 0)
+	for j := 0; j < len(orderProduct.Addons); j++ {
+		a = append(a, orderProduct.Addons[j].ID)
+		newProductsCost = newProductsCost + (orderProduct.Addons[j].Price * orderProduct.ProductCount)
+	}
+	// a = append(a, orderProducts[i].Volumes.ID)
+	flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
+	volumes := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(v))
+	addons := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(a))
+
+	return flavors, volumes, addons, newProductsCost
 }
 
 func (driver *orderDriver) GetAddOrderProductsProductsPriceAfterCoupon(productsCost int, coupon entity.CouponAddOrderRequest) int {
