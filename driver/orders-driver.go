@@ -37,6 +37,7 @@ type OrderDriver interface {
 	AddOrderProductsIDsToOrder(orderProductsIDs []int) error
 	GetOrderProductsIDsByOrderId(orderId int) ([]int, error)
 	GetUserByIdForOrder(wantedId int) (entity.User, error)
+	GetAddOrderProductsProductsPriceAfterCoupon(productsCost int, coupon entity.CouponAddOrderRequest) int
 }
 
 type orderDriver struct {
@@ -57,6 +58,7 @@ var (
 	pd ProductDriver = NewProductDriver()
 	ud UserDriver    = NewUserDriver()
 	sd StoreDriver   = NewStoreDriver()
+	cd CouponDriver  = NewCouponDriver()
 )
 
 func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entity.Order, entity.PaginationInfo, error) {
@@ -112,6 +114,10 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
 			}
+			coupon, err := cd.GetCouponInfo(couponId)
+			if err != nil {
+				return make([]entity.Order, 0), paginationInfo, err
+			}
 
 			order := entity.Order{
 				ID:               id,
@@ -128,7 +134,7 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 				OnTheWay:         onTheWay,
 				Notes:            notes,
 				ProductsCost:     productsCost,
-				CouponID:         couponId,
+				Coupon:           coupon,
 				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 			}
 			orders = append(orders, order)
@@ -517,12 +523,6 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
-	orderTime := time.Now()
-	order.OrderTime = orderTime
-	for i := 0; i < len(order.Products); i++ {
-		order.Products[i].OrderTime = order.OrderTime
-	}
-
 	var userDeliveryCost int
 	user, err := ud.FindUser(order.UserID)
 	if err != nil {
@@ -534,25 +534,34 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 	// fmt.Println("Delivery Cost:", userDeliveryCost)
 
 	_, productsCost := driver.GetAddOrderProductsStatement(order.Products)
+	coupon, err := cd.GetCouponInfo(order.Coupon.ID)
+	if err != nil {
+		return err
+	}
+	if !coupon.FreeDelivery {
+		productsCost = driver.GetAddOrderProductsProductsPriceAfterCoupon(productsCost, coupon)
+	} else {
+		userDeliveryCost = 0
+	}
 
 	stmt := `INSERT INTO orders(
 		user_id, order_time, delivery_time,
 		products_cost, address,
 		delivery_cost, notes, delivery_worker_id,
-		finished, ordered, on_the_way
+		finished, ordered, on_the_way, coupon_id
 	)
 	VALUES (
 		$1, $2, $3,
 		$4, $5, $6,
 		$7, $8, $9,
-		$10, $11
+		$10, $11, $12
 	) returning *` // order_products, , $12
 
 	result, err := dbConn.SQL.ExecContext(ctx, stmt,
 		order.UserID, order.OrderTime, order.DeliveryTime,
 		productsCost, order.Address.ID, // op,
 		userDeliveryCost, order.Notes, order.DeliveryWorkerId,
-		false, false, false)
+		false, false, false, order.Coupon.ID)
 	if err != nil {
 		fmt.Println("Here2")
 		return err
@@ -574,7 +583,6 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 		return err
 	}
 	// op := pd.sliceToString(o)
-
 	// fmt.Println("Adding Order Result:", result)
 	// err = driver.AddOrderIdToOrderProducts(driver.GetTimeStamp(order.OrderTime))
 	// if err != nil {
@@ -619,19 +627,23 @@ func (driver *orderDriver) GetAddOrderProductsStatement(orderProducts []entity.O
 	for i := 0; i < len(orderProducts)-1; i++ {
 
 		singleProduct, _ := pd.FindProduct(orderProducts[i].ProductID)
-		orderProducts[i].ProductPrice = singleProduct.Price
-		productsCost = productsCost + (singleProduct.Price * orderProducts[i].ProductCount)
+		orderProducts[i].ProductPrice = int(math.Ceil(float64(singleProduct.Price) * float64(1-singleProduct.DiscountRatio)))
+		productsCost = productsCost + (int(math.Ceil(float64(singleProduct.Price)*float64(1-singleProduct.DiscountRatio))) * orderProducts[i].ProductCount)
+		fmt.Println("Current Products Cose:", productsCost)
 		singleStore, _ := sd.FindStore(orderProducts[i].StoreId)
 		orderProducts[i].StoreDeliveryCost = singleStore.DeliveryRent
 		orderProducts[i].StoreName = singleStore.Name
 
 		f := make([]int, 0)
 		f = append(f, orderProducts[i].Flavors.ID)
+		productsCost = productsCost + (orderProducts[i].Flavors.Price * orderProducts[i].ProductCount)
 		v := make([]int, 0)
 		v = append(v, orderProducts[i].Volumes.ID)
+		productsCost = productsCost + (orderProducts[i].Volumes.Price * orderProducts[i].ProductCount)
 		a := make([]int, 0)
 		for j := 0; j < len(orderProducts[i].Addons); j++ {
 			a = append(a, orderProducts[i].Addons[j].ID)
+			productsCost = productsCost + (orderProducts[i].Addons[j].Price * orderProducts[i].ProductCount)
 		}
 		// a = append(a, orderProducts[i].Volumes.ID)
 		flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
@@ -656,20 +668,23 @@ func (driver *orderDriver) GetAddOrderProductsStatement(orderProducts []entity.O
 	lastIndex := len(orderProducts) - 1
 
 	singleProduct, _ := pd.FindProduct(orderProducts[lastIndex].ProductID)
-	orderProducts[lastIndex].ProductPrice = singleProduct.Price
-	productsCost = productsCost + (singleProduct.Price * orderProducts[lastIndex].ProductCount)
-	fmt.Println("Products Cost:", productsCost)
+	orderProducts[lastIndex].ProductPrice = int(math.Ceil(float64(singleProduct.Price) * float64(1-singleProduct.DiscountRatio)))
+	productsCost = productsCost + (int(math.Ceil(float64(singleProduct.Price)*float64(1-singleProduct.DiscountRatio))) * orderProducts[lastIndex].ProductCount)
+	// fmt.Println("Products Cost:", productsCost)
 	singleStore, _ := sd.FindStore(orderProducts[lastIndex].StoreId)
 	orderProducts[lastIndex].StoreDeliveryCost = singleStore.DeliveryRent
 	orderProducts[lastIndex].StoreName = singleStore.Name
 
 	f := make([]int, 0)
 	f = append(f, orderProducts[lastIndex].Flavors.ID)
+	productsCost = (productsCost + orderProducts[lastIndex].Flavors.Price*orderProducts[lastIndex].ProductCount)
 	v := make([]int, 0)
 	v = append(v, orderProducts[lastIndex].Volumes.ID)
+	productsCost = (productsCost + orderProducts[lastIndex].Volumes.Price*orderProducts[lastIndex].ProductCount)
 	a := make([]int, 0)
 	for j := 0; j < len(orderProducts[lastIndex].Addons); j++ {
 		a = append(a, orderProducts[lastIndex].Addons[j].ID)
+		productsCost = (productsCost + orderProducts[lastIndex].Addons[j].Price*orderProducts[lastIndex].ProductCount)
 	}
 	// a = append(a, orderProducts[lastIndex].Volumes.ID)
 	flavors := pd.detailsSliceToIdSlice(driver.GetMockDetailsSliceFormIDs(f))
@@ -692,6 +707,33 @@ func (driver *orderDriver) GetAddOrderProductsStatement(orderProducts []entity.O
 	stmt = stmt[0:len(stmt)-1] + ` returning id`
 	fmt.Println("Adding Order Products Statement", stmt)
 	return stmt, productsCost
+}
+
+func (driver *orderDriver) GetAddOrderProductsProductsPriceAfterCoupon(productsCost int, coupon entity.CouponAddOrderRequest) int {
+	var newProductsCost int
+	newProductsCost = productsCost
+	if coupon.Active && coupon.EndDate.After(time.Now()) {
+		if coupon.FromProductsCost {
+			if coupon.TimesUsed < coupon.TimesUsedLimit {
+				if coupon.DiscountPercentage != 0 {
+					newProductsCost = (newProductsCost - int(math.Floor(float64(newProductsCost)*float64(coupon.DiscountPercentage))))
+				} else {
+					fmt.Println("Not Discount Percentage")
+					newProductsCost = newProductsCost - coupon.DiscountAmount
+				}
+			} else {
+				fmt.Println("Exeeded Limt")
+			}
+		} else {
+			fmt.Println("Not From Products Cost")
+		}
+	} else {
+		fmt.Println("Not Active Or After End Date")
+	}
+	fmt.Println("Products Cost:", productsCost)
+	fmt.Println("Coupon:", coupon)
+	fmt.Println("New Products Cost:", newProductsCost)
+	return newProductsCost
 }
 
 func (driver *orderDriver) GetMockDetailsSliceFormIDs(ids []int) []entity.DetailEditRequest {
@@ -836,6 +878,10 @@ func (driver *orderDriver) FindOrder(orderId int) (entity.Order, error) {
 		if err != nil {
 			return entity.Order{}, err
 		}
+		coupon, err := cd.GetCouponInfo(couponId)
+		if err != nil {
+			return entity.Order{}, err
+		}
 		order = entity.Order{
 			ID:               id,
 			UserID:           userId,
@@ -852,7 +898,7 @@ func (driver *orderDriver) FindOrder(orderId int) (entity.Order, error) {
 			Ordered:          ordered,
 			OnTheWay:         onTheWay,
 			DeliveryWorkerId: deliveryWorkerId,
-			CouponID:         couponId,
+			Coupon:           coupon,
 		}
 		if err = rows.Err(); err != nil {
 			return entity.Order{}, err
@@ -915,6 +961,10 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
 			}
+			coupon, err := cd.GetCouponInfo(couponId)
+			if err != nil {
+				return make([]entity.Order, 0), paginationInfo, err
+			}
 
 			order := entity.Order{
 				ID:               id,
@@ -931,7 +981,7 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 				OnTheWay:         onTheWay,
 				Notes:            notes,
 				ProductsCost:     productsCost,
-				CouponID:         couponId,
+				Coupon:           coupon,
 				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 			}
 			orders = append(orders, order)
@@ -1003,6 +1053,10 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
 			}
+			coupon, err := cd.GetCouponInfo(couponId)
+			if err != nil {
+				return make([]entity.Order, 0), paginationInfo, err
+			}
 
 			order := entity.Order{
 				ID:               id,
@@ -1019,7 +1073,7 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 				OnTheWay:         onTheWay,
 				Notes:            notes,
 				ProductsCost:     productsCost,
-				CouponID:         couponId,
+				Coupon:           coupon,
 				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 			}
 			notFinishedOrders = append(notFinishedOrders, order)
@@ -1082,6 +1136,10 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 		if err != nil {
 			return make([]entity.Order, 0), err
 		}
+		coupon, err := cd.GetCouponInfo(couponId)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
 
 		order := entity.Order{
 			ID:               id,
@@ -1098,7 +1156,7 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 			OnTheWay:         onTheWay,
 			Notes:            notes,
 			ProductsCost:     productsCost,
-			CouponID:         couponId,
+			Coupon:           coupon,
 			Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 		}
 		orders = append(orders, order)
@@ -1160,6 +1218,10 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 		if err != nil {
 			return make([]entity.Order, 0), err
 		}
+		coupon, err := cd.GetCouponInfo(couponId)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
 
 		order := entity.Order{
 			ID:               id,
@@ -1176,7 +1238,7 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 			OnTheWay:         onTheWay,
 			Notes:            notes,
 			ProductsCost:     productsCost,
-			CouponID:         couponId,
+			Coupon:           coupon,
 			Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
 		}
 		orders = append(orders, order)
@@ -1354,7 +1416,7 @@ func GetOrderEditStatementString(order entity.OrderEditRequest) string {
 		stmt = stmt + ` address = ` + fmt.Sprint(order.Address.ID) + `,`
 	}
 	stmt = stmt[0:len(stmt)-1] + ` where id = ` + fmt.Sprint(order.ID) + ` returning id`
-	fmt.Println("Edit Order Statement Is:", stmt)
+	// fmt.Println("Edit Order Statement Is:", stmt)
 
 	return stmt
 }

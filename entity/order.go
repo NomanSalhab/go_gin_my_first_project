@@ -3,22 +3,22 @@ package entity
 import "time"
 
 type Order struct {
-	ID               int            `json:"id"`
-	UserID           int            `json:"user_id" binding:"required"`
-	UserName         string         `json:"user_name"`  //  binding:"required"
-	UserPhone        string         `json:"user_phone"` //  binding:"required"
-	OrderTime        time.Time      `json:"order_time"`
-	DeliveryTime     time.Time      `json:"delivery_time"`
-	Products         []OrderProduct `json:"products" binding:"required"`
-	ProductsCost     int            `json:"products_cost"`
-	Address          OrderAddress   `json:"address" binding:"required"`
-	DeliveryCost     int            `json:"delivery_cost"` // binding:"required"
-	Notes            string         `json:"notes"`         //* binding:"required"
-	DeliveryWorkerId int            `json:"delivery_worker_id"`
-	Ordered          bool           `json:"ordered"`
-	OnTheWay         bool           `json:"on_the_way"`
-	Finished         bool           `json:"finished"`
-	CouponID         int            `json:"coupon_id"`
+	ID               int                   `json:"id"`
+	UserID           int                   `json:"user_id" binding:"required"`
+	UserName         string                `json:"user_name"`  //  binding:"required"
+	UserPhone        string                `json:"user_phone"` //  binding:"required"
+	OrderTime        time.Time             `json:"order_time"`
+	DeliveryTime     time.Time             `json:"delivery_time"`
+	Products         []OrderProduct        `json:"products" binding:"required"`
+	ProductsCost     int                   `json:"products_cost"`
+	Address          OrderAddress          `json:"address" binding:"required"`
+	DeliveryCost     int                   `json:"delivery_cost"` // binding:"required"
+	Notes            string                `json:"notes"`         //* binding:"required"
+	DeliveryWorkerId int                   `json:"delivery_worker_id"`
+	Ordered          bool                  `json:"ordered"`
+	OnTheWay         bool                  `json:"on_the_way"`
+	Finished         bool                  `json:"finished"`
+	Coupon           CouponAddOrderRequest `json:"coupon"`
 }
 
 // Addons       [][]int        `json:"addons" binding:"required"`
@@ -55,20 +55,20 @@ type OrderChangeStateRequest struct {
 }
 
 type OrderEditRequest struct {
-	ID               int            `json:"id" binding:"required"`
-	UserID           int            `json:"user_id"`
-	OrderTime        time.Time      `json:"order_time"`
-	DeliveryTime     time.Time      `json:"delivery_time"`
-	Address          Address        `json:"address"`
-	Products         []OrderProduct `json:"products"`
-	ProductsCost     int            `json:"products_cost"`
-	DeliveryCost     int            `json:"delivery_cost"`
-	DeliveryWorkerId int            `json:"delivery_worker_id"`
-	Notes            string         `json:"notes"`
-	Ordered          bool           `json:"ordered"`
-	OnTheWay         bool           `json:"on_the_way"`
-	Finished         bool           `json:"finished"`
-	CouponID         int            `json:"coupon_id"`
+	ID               int                   `json:"id" binding:"required"`
+	UserID           int                   `json:"user_id"`
+	OrderTime        time.Time             `json:"order_time"`
+	DeliveryTime     time.Time             `json:"delivery_time"`
+	Address          Address               `json:"address"`
+	Products         []OrderProduct        `json:"products"`
+	ProductsCost     int                   `json:"products_cost"`
+	DeliveryCost     int                   `json:"delivery_cost"`
+	DeliveryWorkerId int                   `json:"delivery_worker_id"`
+	Notes            string                `json:"notes"`
+	Ordered          bool                  `json:"ordered"`
+	OnTheWay         bool                  `json:"on_the_way"`
+	Finished         bool                  `json:"finished"`
+	Coupon           CouponAddOrderRequest `json:"coupon"`
 }
 
 // Addons       string         `json:"addons"`

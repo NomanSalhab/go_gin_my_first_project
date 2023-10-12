@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/driver"
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
@@ -35,6 +36,12 @@ func NewOrderService(driver driver.OrderDriver) OrderService {
 }
 
 func (service *orderService) AddOrder(order entity.Order) error {
+
+	orderTime := time.Now()
+	order.OrderTime = orderTime
+	for i := 0; i < len(order.Products); i++ {
+		order.Products[i].OrderTime = order.OrderTime
+	}
 
 	err := service.driver.AddOrder(order)
 	if err != nil {

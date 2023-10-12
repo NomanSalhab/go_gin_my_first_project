@@ -9,7 +9,7 @@ type Coupon struct {
 	TimesUsed          int       `json:"times_used"`
 	FreeDelivery       bool      `json:"free_delivery"`
 	Active             bool      `json:"active"`
-	TimesUsedLimit     bool      `json:"times_used_limit"`
+	TimesUsedLimit     int       `json:"times_used_limit"`
 	EndDate            time.Time `json:"end_date"`
 	DiscountPercentage float32   `json:"discount_percentage"`
 	DiscountAmount     int       `json:"discount_amount"`
@@ -23,7 +23,21 @@ type CouponEditRequest struct {
 	TimesUsed          int       `json:"times_used"`
 	FreeDelivery       bool      `json:"free_delivery"`
 	Active             bool      `json:"active"`
-	TimesUsedLimit     bool      `json:"times_used_limit"`
+	TimesUsedLimit     int       `json:"times_used_limit"`
+	EndDate            time.Time `json:"end_date"`
+	DiscountPercentage float32   `json:"discount_percentage"`
+	DiscountAmount     int       `json:"discount_amount"`
+	FromProductsCost   bool      `json:"from_products_cost"`
+}
+
+type CouponAddOrderRequest struct {
+	ID                 int       `json:"id"`
+	Name               string    `json:"name"`
+	Code               string    `json:"code"`
+	TimesUsed          int       `json:"times_used"`
+	FreeDelivery       bool      `json:"free_delivery"`
+	Active             bool      `json:"active"`
+	TimesUsedLimit     int       `json:"times_used_limit"`
 	EndDate            time.Time `json:"end_date"`
 	DiscountPercentage float32   `json:"discount_percentage"`
 	DiscountAmount     int       `json:"discount_amount"`

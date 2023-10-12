@@ -66,34 +66,38 @@
 [GIN-debug] POST   /api/details/add          --> main.main.func62 (5 handlers)
 [GIN-debug] PUT    /api/details/edit         --> main.main.func63 (5 handlers)
 [GIN-debug] DELETE /api/details/delete       --> main.main.func64 (5 handlers)
-[GIN-debug] GET    /api/products/all         --> main.main.func65 (5 handlers)
-[GIN-debug] GET    /api/products/active      --> main.main.func66 (5 handlers)
-[GIN-debug] GET    /api/products/not_active  --> main.main.func67 (5 handlers)
-[GIN-debug] POST   /api/products/add         --> main.main.func68 (5 handlers)
-[GIN-debug] POST   /api/products/info        --> main.main.func69 (5 handlers)
-[GIN-debug] PUT    /api/products/edit        --> main.main.func70 (5 handlers)
-[GIN-debug] PUT    /api/products/activate    --> main.main.func71 (5 handlers)
-[GIN-debug] PUT    /api/products/deactivate  --> main.main.func72 (5 handlers)
-[GIN-debug] DELETE /api/products/delete      --> main.main.func73 (5 handlers)
-[GIN-debug] POST   /api/products/product_category_products --> main.main.func74 (5 handlers)
-[GIN-debug] GET    /api/orders/all/:page/:limit --> main.main.func75 (5 handlers)
-[GIN-debug] GET    /api/orders/finished/:page/:limit --> main.main.func76 (5 handlers)
-[GIN-debug] GET    /api/orders/not_finished/:page/:limit --> main.main.func77 (5 handlers)
-[GIN-debug] GET    /api/orders/user_finished/:user_id --> main.main.func78 (5 handlers)
-[GIN-debug] GET    /api/orders/user_not_finished/:user_id --> main.main.func79 (5 handlers)
-[GIN-debug] POST   /api/orders/add           --> main.main.func80 (5 handlers)
-[GIN-debug] GET    /api/orders/finish_order/:id --> main.main.func81 (5 handlers)
-[GIN-debug] GET    /api/orders/info/:id      --> main.main.func82 (5 handlers)
-[GIN-debug] PUT    /api/orders/edit          --> main.main.func83 (5 handlers)
-[GIN-debug] DELETE /api/orders/delete        --> main.main.func84 (5 handlers)
+[GIN-debug] GET    /api/coupons/all          --> main.main.func65 (5 handlers)
+[GIN-debug] POST   /api/coupons/add          --> main.main.func66 (5 handlers)
+[GIN-debug] PUT    /api/coupons/edit         --> main.main.func67 (5 handlers)
+[GIN-debug] DELETE /api/coupons/delete       --> main.main.func68 (5 handlers)
+[GIN-debug] GET    /api/coupons/info/:id     --> main.main.func69 (5 handlers)
+[GIN-debug] GET    /api/coupons/activate/:id --> main.main.func70 (5 handlers)
+[GIN-debug] GET    /api/coupons/deactivate/:id --> main.main.func71 (5 handlers)
+[GIN-debug] GET    /api/coupons/enable_free_delivery/:id --> main.main.func72 (5 handlers)
+[GIN-debug] GET    /api/coupons/disable_free_delivery/:id --> main.main.func73 (5 handlers)
+[GIN-debug] GET    /api/coupons/enable_from_products_cost/:id --> main.main.func74 (5 handlers)
+[GIN-debug] GET    /api/coupons/disable_from_products_cost/:id --> main.main.func75 (5 handlers)
+[GIN-debug] GET    /api/products/all         --> main.main.func76 (5 handlers)
+[GIN-debug] GET    /api/products/active      --> main.main.func77 (5 handlers)
+[GIN-debug] GET    /api/products/not_active  --> main.main.func78 (5 handlers)
+[GIN-debug] POST   /api/products/add         --> main.main.func79 (5 handlers)
+[GIN-debug] POST   /api/products/info        --> main.main.func80 (5 handlers)
+[GIN-debug] PUT    /api/products/edit        --> main.main.func81 (5 handlers)
+[GIN-debug] PUT    /api/products/activate    --> main.main.func82 (5 handlers)
+[GIN-debug] PUT    /api/products/deactivate  --> main.main.func83 (5 handlers)
+[GIN-debug] DELETE /api/products/delete      --> main.main.func84 (5 handlers)
+[GIN-debug] POST   /api/products/product_category_products --> main.main.func85 (5 handlers)
+[GIN-debug] GET    /api/orders/all/:page/:limit --> main.main.func86 (5 handlers)
+[GIN-debug] GET    /api/orders/finished/:page/:limit --> main.main.func87 (5 handlers)
+[GIN-debug] GET    /api/orders/not_finished/:page/:limit --> main.main.func88 (5 handlers)
+[GIN-debug] GET    /api/orders/user_finished/:user_id --> main.main.func89 (5 handlers)
+[GIN-debug] GET    /api/orders/user_not_finished/:user_id --> main.main.func90 (5 handlers)
+[GIN-debug] POST   /api/orders/add           --> main.main.func91 (5 handlers)
+[GIN-debug] GET    /api/orders/finish_order/:id --> main.main.func92 (5 handlers)
+[GIN-debug] GET    /api/orders/info/:id      --> main.main.func93 (5 handlers)
+[GIN-debug] PUT    /api/orders/edit          --> main.main.func94 (5 handlers)
+[GIN-debug] DELETE /api/orders/delete        --> main.main.func95 (5 handlers)
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [10 Oct 23 17:12 +03] GET /api/orders/info/304 200 1.145952s 
-::1 - [10 Oct 23 17:13 +03] POST /api/products/info 200 157.6784ms 
-::1 - [10 Oct 23 17:14 +03] POST /api/products/info 200 119.6084ms 
-::1 - [10 Oct 23 17:15 +03] GET /api/orders/all/1/20 200 341.3958ms 
-::1 - [10 Oct 23 17:16 +03] GET /api/orders/finished/1/20 200 121.0289ms 
-::1 - [10 Oct 23 17:16 +03] GET /api/orders/user_finished/1 200 118.5432ms 
-::1 - [10 Oct 23 17:16 +03] GET /api/orders/user_not_finished/1 200 364.5115ms 
-::1 - [10 Oct 23 17:16 +03] GET /api/orders/not_finished/1/20 200 356.3581ms 
+::1 - [12 Oct 23 18:52 +03] POST /api/orders/add 200 485.916ms 

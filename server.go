@@ -42,6 +42,10 @@ var (
 	detailService    service.DetailService       = service.NewDetailService(detailsDriver)
 	detailController controller.DetailController = controller.NewDetailController(detailService)
 
+	couponsDriver    driver.CouponDriver         = driver.NewCouponDriver()
+	couponService    service.CouponService       = service.NewCouponService(couponsDriver)
+	couponController controller.CouponController = controller.NewCouponController(couponService)
+
 	productsDriver    driver.ProductDriver         = driver.NewProductDriver()
 	productService    service.ProductService       = service.NewProductService(productsDriver)
 	ProductController controller.ProductController = controller.NewProductController(productService)
@@ -781,6 +785,139 @@ func main() {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{"message": "detail is deleted successfully"})
+			}
+		})
+
+	}
+
+	apiCouponsRoutes := server.Group("/api/coupons")
+	{
+		apiCouponsRoutes.GET("/all", func(ctx *gin.Context) {
+			ctx.JSON(200, couponController.FindAllCoupons())
+		})
+
+		apiCouponsRoutes.POST("/add", func(ctx *gin.Context) {
+			err := couponController.AddCoupon(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "coupon added successfully!"})
+			}
+		})
+
+		apiCouponsRoutes.PUT("/edit", func(ctx *gin.Context) {
+			err := couponController.EditCoupon(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "coupon is edited successfully"})
+			}
+		})
+
+		apiCouponsRoutes.DELETE("/delete", func(ctx *gin.Context) {
+			err := couponController.DeleteCoupon(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "coupon is deleted successfully"})
+			}
+		})
+
+		apiCouponsRoutes.GET("/info/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			coupon, err := couponController.GetCouponInfo(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"coupon_info": coupon})
+			}
+		})
+
+		apiCouponsRoutes.GET("/activate/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = couponController.ActivateCoupon(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "coupon activated successfully"})
+			}
+		})
+
+		apiCouponsRoutes.GET("/deactivate/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = couponController.DeactivateCoupon(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "coupon deactivated successfully"})
+			}
+		})
+
+		apiCouponsRoutes.GET("/enable_free_delivery/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = couponController.EnableFreeDelivery(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "enabled free delivery successfully"})
+			}
+		})
+
+		apiCouponsRoutes.GET("/disable_free_delivery/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = couponController.DisableFreeDelivery(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "disabled free delivery successfully"})
+			}
+		})
+
+		apiCouponsRoutes.GET("/enable_from_products_cost/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = couponController.EnableFromProducts(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "enabled from products cost successfully"})
+			}
+		})
+
+		apiCouponsRoutes.GET("/disable_from_products_cost/:id", func(ctx *gin.Context) {
+			id := ctx.Param("id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			err = couponController.DisableFromProducts(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "disabled from products cost successfully"})
 			}
 		})
 

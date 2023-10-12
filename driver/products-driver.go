@@ -407,9 +407,17 @@ func (driver *productDriver) AddProduct(product entity.Product) error {
 	defer cancel()
 
 	stmt := `INSERT INTO products
-		(name, store_id, product_category_id, image, summary, price, active, flavors, volumes, addons, discount_ratio)
+		(
+			name, store_id, product_category_id, 
+			image, summary, price, active, 
+			flavors, volumes, addons, discount_ratio
+		)
 	VALUES 
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) returning *`
+		(
+			$1, $2, $3, 
+			$4, $5, $6, $7, 
+			$8, $9, $10, $11
+		) returning *`
 
 	flavors := driver.detailsSliceToIdSlice(product.Flavors)
 	volumes := driver.detailsSliceToIdSlice(product.Volumes)
