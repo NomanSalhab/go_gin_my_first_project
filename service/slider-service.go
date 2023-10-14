@@ -6,24 +6,23 @@ import (
 )
 
 type SliderService interface {
-	AddSlider(entity.Slider) error
+	AddSlider(slider entity.Slider) error
 	FindAllSliders() []entity.Slider
 	FindActiveSliders() []entity.Slider
 	FindNotActiveSliders() []entity.Slider
 	EditSlider(sliderEditInfo entity.SliderEditRequest) error
 	FindSlidersByStore(sliderId entity.StoreSliders) ([]entity.Slider, error)
 	DeleteSlider(sliderDeleteInfo entity.SliderEditRequest) error
-
-	AddMockSliders(sliders []entity.Slider)
 }
 
 type sliderService struct {
-	sliders []entity.Slider
-	driver  driver.SliderDriver
+	driver driver.SliderDriver
 }
 
-func NewSliderService() SliderService {
-	return &sliderService{}
+func NewSliderService(driver driver.SliderDriver) SliderService {
+	return &sliderService{
+		driver: driver,
+	}
 }
 
 func (service *sliderService) AddSlider(slider entity.Slider) error {
@@ -189,8 +188,4 @@ func (service *sliderService) DeleteSlider(sliderDeleteInfo entity.SliderEditReq
 	// }
 	// service.sliders = tempSlider
 	// return nil
-}
-
-func (service *sliderService) AddMockSliders(sliders []entity.Slider) {
-	service.sliders = append(service.sliders, sliders...)
 }

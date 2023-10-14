@@ -32,7 +32,8 @@ var (
 	productCategortService    service.ProductCategoryService       = service.NewProductCategoryService()
 	ProductCategoryController controller.ProductCategoryController = controller.NewProductCategoryController(productCategortService)
 
-	sliderService    service.SliderService       = service.NewSliderService()
+	sliderDriver     driver.SliderDriver         = driver.NewSliderDriver()
+	sliderService    service.SliderService       = service.NewSliderService(sliderDriver)
 	sliderController controller.SliderController = controller.NewSliderController(sliderService)
 
 	areaService    service.AreaService       = service.NewAreaService()

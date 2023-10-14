@@ -103,3 +103,7 @@
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
+::1 - [14 Oct 23 19:46 +03] GET /api/sliders/active 200 117.9938ms 
+::1 - [14 Oct 23 19:46 +03] POST /api/sliders/store_sliders 200 124.6841ms 
+::1 - [14 Oct 23 19:46 +03] POST /api/sliders/store_sliders 200 122.9736ms 
+::1 - [14 Oct 23 19:47 +03] GET /api/sliders/all 200 115.4463ms 
