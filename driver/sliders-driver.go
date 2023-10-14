@@ -9,7 +9,25 @@ import (
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 )
 
-func FindAllSliders() ([]entity.Slider, error) {
+type SliderDriver interface {
+	FindAllSliders() ([]entity.Slider, error)
+	FindActiveSliders() ([]entity.Slider, error)
+	FindNotActiveSliders() ([]entity.Slider, error)
+	FindSlidersByStore(wantedId int) ([]entity.Slider, error)
+	AddSlider(slider entity.Slider) error
+	DeleteSlider(wantedId int) error
+	EditSlider(sliderEditInfo entity.SliderEditRequest) (entity.Slider, error)
+	GetEditSliderStatementString(sliderEditInfo entity.SliderEditRequest) string
+}
+
+type sliderDriver struct {
+}
+
+func NewSliderDriver() SliderDriver {
+	return &sliderDriver{}
+}
+
+func (driver *sliderDriver) FindAllSliders() ([]entity.Slider, error) {
 	sliders := make([]entity.Slider, 0)
 	rows, err := dbConn.SQL.Query("select id, image, store_id, product_id, active from sliders")
 	if err != nil {
@@ -41,7 +59,7 @@ func FindAllSliders() ([]entity.Slider, error) {
 	return sliders, nil
 }
 
-func FindActiveSliders() ([]entity.Slider, error) {
+func (driver *sliderDriver) FindActiveSliders() ([]entity.Slider, error) {
 	sliders := make([]entity.Slider, 0)
 	rows, err := dbConn.SQL.Query("select id, image, store_id, product_id, active from sliders where active = true")
 	if err != nil {
@@ -73,7 +91,7 @@ func FindActiveSliders() ([]entity.Slider, error) {
 	return sliders, nil
 }
 
-func FindNotActiveSliders() ([]entity.Slider, error) {
+func (driver *sliderDriver) FindNotActiveSliders() ([]entity.Slider, error) {
 	sliders := make([]entity.Slider, 0)
 	rows, err := dbConn.SQL.Query("select id, image, store_id, product_id, active from sliders where active = false")
 	if err != nil {
@@ -105,7 +123,7 @@ func FindNotActiveSliders() ([]entity.Slider, error) {
 	return sliders, nil
 }
 
-func FindSlidersByStore(wantedId int) ([]entity.Slider, error) {
+func (driver *sliderDriver) FindSlidersByStore(wantedId int) ([]entity.Slider, error) {
 	sliders := make([]entity.Slider, 0)
 	rows, err := dbConn.SQL.Query("select id, image, store_id, product_id, active from sliders where store_id = $1", wantedId)
 	if err != nil {
@@ -137,7 +155,7 @@ func FindSlidersByStore(wantedId int) ([]entity.Slider, error) {
 	return sliders, nil
 }
 
-func AddSlider(slider entity.Slider) error {
+func (driver *sliderDriver) AddSlider(slider entity.Slider) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -157,7 +175,7 @@ func AddSlider(slider entity.Slider) error {
 	return nil
 }
 
-func DeleteSlider(wantedId int) error {
+func (driver *sliderDriver) DeleteSlider(wantedId int) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -176,12 +194,12 @@ func DeleteSlider(wantedId int) error {
 	return nil
 }
 
-func EditSlider(sliderEditInfo entity.SliderEditRequest) (entity.Slider, error) {
+func (driver *sliderDriver) EditSlider(sliderEditInfo entity.SliderEditRequest) (entity.Slider, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
-	stmt := GetEditSliderStatementString(sliderEditInfo)
+	stmt := driver.GetEditSliderStatementString(sliderEditInfo)
 
 	result, err := dbConn.SQL.ExecContext(ctx, stmt)
 	if err != nil {
@@ -198,7 +216,7 @@ func EditSlider(sliderEditInfo entity.SliderEditRequest) (entity.Slider, error) 
 	return entity.Slider{}, nil
 }
 
-func GetEditSliderStatementString(sliderEditInfo entity.SliderEditRequest) string {
+func (driver *sliderDriver) GetEditSliderStatementString(sliderEditInfo entity.SliderEditRequest) string {
 	stmt := `UPDATE sliders SET `
 	if sliderEditInfo.StoreId != 0 {
 		stmt = stmt + `store_id = ` + fmt.Sprint(sliderEditInfo.StoreId) + `, `

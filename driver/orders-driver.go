@@ -19,8 +19,10 @@ type OrderDriver interface {
 	DeleteOrder(wantedId int) error
 	FindUserFinishedOrders(userWantedId int) ([]entity.Order, error)
 	FindUserNotFinishedOrders(userWantedId int) ([]entity.Order, error)
+	FindDeliveryWorkerNotFinishedOrders(userWantedId int) ([]entity.Order, error)
 	FinishOrder(orderId int) error
 	EditOrder(orderEditInfo entity.OrderEditRequest) error
+	ChangeOrderWorkerId(orderChangeWorkerIdInfo entity.OrderChangeWorkerIdRequest) error
 
 	GetAddressById(wantedId int) (entity.OrderAddress, error)
 
@@ -650,6 +652,78 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 	return orders, nil
 }
 
+func (driver *orderDriver) FindDeliveryWorkerNotFinishedOrders(userWantedId int) ([]entity.Order, error) {
+	orders := make([]entity.Order, 0)
+	rows, err := dbConn.SQL.Query(`
+	select 
+		id, user_id, order_time, delivery_time, 
+		products_cost, address, 
+		delivery_cost, notes, finished, 
+		delivery_worker_id, ordered, on_the_way, coupon_id  
+	from orders where delivery_worker_id = $1 and finished = false order by order_time desc`, userWantedId) //order_products,
+	if err != nil {
+		return make([]entity.Order, 0), err
+	}
+	defer rows.Close()
+
+	var id, userId, productsCost, address, deliveryCost, deliveryWorkerId, couponId int
+	var notes string
+	var finished, ordered, onTheWay bool
+	var orderTime, deliveryTime time.Time
+	// var orderProducts []string
+
+	for rows.Next() {
+		err := rows.Scan(&id, &userId, &orderTime, &deliveryTime,
+			&productsCost, &address, // pq.Array(&orderProducts),
+			&deliveryCost, &notes, &finished,
+			&deliveryWorkerId, &ordered, &onTheWay, &couponId)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
+
+		finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
+		finalAddress, err := driver.GetAddressById(address)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
+		finalUser, err := ud.FindUser(userId)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
+		coupon, err := cd.GetCouponInfo(couponId)
+		if err != nil {
+			return make([]entity.Order, 0), err
+		}
+
+		order := entity.Order{
+			ID:               id,
+			UserID:           userId,
+			UserName:         finalUser.Name,
+			UserPhone:        finalUser.Phone,
+			OrderTime:        orderTime,
+			DeliveryTime:     deliveryTime,
+			Address:          finalAddress,
+			DeliveryCost:     deliveryCost,
+			DeliveryWorkerId: deliveryWorkerId,
+			Finished:         finished,
+			Ordered:          ordered,
+			OnTheWay:         onTheWay,
+			Notes:            notes,
+			ProductsCost:     productsCost,
+			Coupon:           coupon,
+			Products:         finalOrderProducts,
+		}
+		orders = append(orders, order)
+		if err = rows.Err(); err != nil {
+			return make([]entity.Order, 0), err
+		}
+	}
+	return orders, nil
+}
+
 func (driver *orderDriver) DeleteOrder(wantedId int) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
@@ -722,6 +796,14 @@ func (driver *orderDriver) FinishOrder(orderId int) error {
 		if err != nil {
 			return err
 		}
+	}
+	if order.DeliveryWorkerId != 0 {
+		err = ud.EditDeliveryWorkerBalanceAndCircles(order.DeliveryWorkerId, order.DeliveryCost)
+		if err != nil {
+			return err
+		}
+	} else {
+		return errors.New("order is not set to delivery worker")
 	}
 
 	return nil
@@ -817,8 +899,8 @@ func GetOrderDeliveryCost(order entity.Order) int {
 	for _, item := range storeIncreaseBalanceItems {
 		deliveryCost = deliveryCost + item.Balance
 	}
-	fmt.Println("Stores Icrease Balance Items is:", deliveryCost)
-	fmt.Println("Stores Delivery Cost is:", deliveryCost)
+	// fmt.Println("Stores Icrease Balance Items is:", deliveryCost)
+	// fmt.Println("Stores Delivery Cost is:", deliveryCost)
 	return deliveryCost
 }
 
@@ -880,4 +962,50 @@ func (driver *orderDriver) FindNotFinishedPaginationInfo() entity.PaginationInfo
 			MaximumPagesCount: int(math.Ceil(float64(float64(counter) / float64(1)))),
 		}
 	}
+}
+
+func (driver *orderDriver) ChangeOrderWorkerId(orderChangeWorkerIdInfo entity.OrderChangeWorkerIdRequest) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	worker, err := ud.FindUser(orderChangeWorkerIdInfo.DeliveryWorkerId)
+	if err != nil {
+		return err
+	}
+	if worker.Role != 1 {
+		return errors.New("user id is not for a delivery worker")
+	}
+	stmt := GetOrderChangeWorkerIdStatementString(orderChangeWorkerIdInfo)
+
+	result, err := dbConn.SQL.ExecContext(ctx, stmt)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("order could not be found")
+	}
+	driver.cacheorders = make([]entity.Order, 0)
+	if orderChangeWorkerIdInfo.Finished {
+		driver.FinishOrder(orderChangeWorkerIdInfo.ID)
+	}
+
+	return nil
+}
+
+func GetOrderChangeWorkerIdStatementString(order entity.OrderChangeWorkerIdRequest) string {
+	stmt := `UPDATE orders SET`
+	if order.Ordered {
+		stmt = stmt + ` ordered = true,`
+	}
+	if order.OnTheWay {
+		stmt = stmt + ` on_the_way = true,`
+	}
+	if order.DeliveryWorkerId != 0 {
+		stmt = stmt + ` delivery_worker_id = ` + fmt.Sprint(order.DeliveryWorkerId) + `,`
+	}
+	stmt = stmt[0:len(stmt)-1] + ` where id = ` + fmt.Sprint(order.ID) + ` returning id`
+
+	return stmt
 }

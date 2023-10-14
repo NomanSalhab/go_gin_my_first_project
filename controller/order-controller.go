@@ -15,11 +15,13 @@ type OrderController interface {
 	AddOrder(ctx *gin.Context, uc UserController) error
 	// ChangeOrderState(ctx *gin.Context, sc StoreController, pc ProductController, uc UserController) error
 	FinishOrder(ctx *gin.Context, orderIdValue int) error
+	ChangeOrderWorkerId(ctx *gin.Context) error
 	FindFinishedOrders(pageLimit int, pageOffset int) ([]entity.Order, entity.PaginationInfo, error)
 	FindNotFinishedOrders(pageLimit int, pageOffset int) ([]entity.Order, entity.PaginationInfo, error)
 	FindOrder(ctx *gin.Context, idValue int) (entity.Order, error)
 	FindUserFinishedOrders(userWantedId int) ([]entity.Order, error)
 	FindUserNotFinishedOrders(userWantedId int) ([]entity.Order, error)
+	FindDeliveryWorkerNotFinishedOrders(userWantedId int) ([]entity.Order, error)
 	EditOrder(ctx *gin.Context) error
 	DeleteOrder(ctx *gin.Context) error
 }
@@ -113,6 +115,10 @@ func (c *orderController) FindUserNotFinishedOrders(userWantedId int) ([]entity.
 	return c.service.FindUserNotFinishedOrders(userWantedId)
 }
 
+func (c *orderController) FindDeliveryWorkerNotFinishedOrders(userWantedId int) ([]entity.Order, error) {
+	return c.service.FindDeliveryWorkerNotFinishedOrders(userWantedId)
+}
+
 func (c *orderController) FindOrder(ctx *gin.Context, idValue int) (entity.Order, error) {
 	if idValue == 0 {
 		var order entity.Order
@@ -169,56 +175,21 @@ func (c *orderController) EditOrder(ctx *gin.Context) error {
 	return err
 }
 
-// func (c *orderController) ChangeOrderState(ctx *gin.Context, sc StoreController, pc ProductController, uc UserController) error {
-// 	var orderStateInfo entity.OrderChangeStateRequest
-// 	err := ctx.ShouldBindJSON(&orderStateInfo)
-// 	if err != nil {
-// 		return err
-// 	}
+func (c *orderController) ChangeOrderWorkerId(ctx *gin.Context) error {
+	var orderChangeWorkerIdInfo entity.OrderChangeWorkerIdRequest
+	err := ctx.ShouldBindJSON(&orderChangeWorkerIdInfo)
+	if err != nil {
+		return err
+	}
 
-// 	err = validate.Struct(orderStateInfo)
-// 	if err != nil {
-// 		return err
-// 	}
+	err = validate.Struct(orderChangeWorkerIdInfo)
+	if err != nil {
+		return err
+	}
 
-// 	products := pc.FindAllProducts()
-// 	orderProducts, err := c.service.FindOrder(entity.OrderInfoRequest{ID: orderStateInfo.ID})
-// 	users := uc.FindAllUsers()
-// 	stores := sc.FindAllStores()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	err = c.service.ChangeOrderState(orderStateInfo)
-// 	if err == nil {
-// 		if orderStateInfo.Finished {
-// 			for i := 0; i < len(orderProducts.Products); i++ {
-// 				for j := 0; j < len(products); j++ {
-// 					if products[j].ID == orderProducts.Products[i].ProductID {
-// 						products[j].OrderCount = products[j].OrderCount + orderProducts.Products[i].ProductCount
-// 					}
-// 				}
-// 			}
-// 			for i := 0; i < len(orderProducts.Products); i++ {
-// 				for j := 0; j < len(stores); j++ {
-// 					if stores[j].ID == orderProducts.Products[i].StoreId {
-// 						stores[j].Balance = stores[j].Balance + (orderProducts.Products[i].ProductPrice * orderProducts.Products[i].ProductCount)
-// 					}
-// 				}
-// 			}
-// 			userBalance := int(orderProducts.DeliveryCost) /*+ int(orderProducts.AddonsCost)*/
-// 			for i := 0; i < len(orderProducts.Products); i++ {
-// 				userBalance = userBalance + (orderProducts.Products[i].ProductPrice * orderProducts.Products[i].ProductCount)
-// 			}
-// 			for j := 0; j < len(users); j++ {
-// 				if users[j].ID == orderProducts.UserID {
-// 					users[j].Circles = users[j].Circles + int(orderProducts.DeliveryCost/1000)
-// 					users[j].Balance = users[j].Balance + userBalance
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return err
-// }
+	err = c.service.ChangeOrderWorkerId(orderChangeWorkerIdInfo)
+	return err
+}
 
 func (c *orderController) FinishOrder(ctx *gin.Context, orderIdValue int) error {
 	err := c.service.FinishOrder(orderIdValue)

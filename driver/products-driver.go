@@ -17,6 +17,8 @@ type ProductDriver interface {
 	FindNotActiveProducts() ([]entity.Product, error)
 	FindProductByProductCategory(wantedProductStoreId int, wantedProductCategoryId int) ([]entity.Product, error)
 	FindProduct(wantedId int) (entity.Product, error)
+	FindBestSellingProducts(productsCountLimit int) ([]entity.Product, error)
+	FindOffersProducts() ([]entity.Product, error)
 	GetIntSliceFromString(theString []string) []int
 	AddProduct(product entity.Product) error
 	detailsSliceToIdSlice(details []entity.DetailEditRequest) []int
@@ -629,4 +631,89 @@ func (driver *productDriver) EditProductOrderCount(productInfo entity.OrderProdu
 		return err
 	}
 	return nil
+}
+
+func (driver *productDriver) FindBestSellingProducts(productsCountLimit int) ([]entity.Product, error) {
+	bestSellingProducts := make([]entity.Product, 0)
+	rows, err := dbConn.SQL.Query(`
+	select 
+		id, name, store_id, product_category_id, image, summary, 
+		price, order_count, discount_ratio 
+	from products order by order_count desc limit $1`, productsCountLimit)
+	if err != nil {
+		return make([]entity.Product, 0), err
+	}
+	defer rows.Close()
+
+	var id, storeId, productCategoryId, price, orderCount int
+	var name, image, summary string
+	var discountRatio float32
+
+	for rows.Next() {
+		err := rows.Scan(&id, &name, &storeId, &productCategoryId, &image, &summary, &price, &orderCount, &discountRatio)
+		if err != nil {
+			// log.Println(err)
+			return make([]entity.Product, 0), err
+		}
+		bestSellingProducts = append(bestSellingProducts, entity.Product{
+			ID:                id,
+			Name:              name,
+			StoreId:           storeId,
+			ProductCategoryId: productCategoryId,
+			Image:             image,
+			Summary:           summary,
+			Price:             price,
+			OrderCount:        orderCount,
+			DiscountRatio:     discountRatio,
+		})
+		// fmt.Println("Record is:", userId, deliveryTime, products)
+		if err = rows.Err(); err != nil {
+			// log.Fatal("error Scanning Rows!")
+			return make([]entity.Product, 0), err
+		}
+		// fmt.Println("------------------------")
+	}
+
+	return bestSellingProducts, nil
+}
+
+func (driver *productDriver) FindOffersProducts() ([]entity.Product, error) {
+	offersProducts := make([]entity.Product, 0)
+	rows, err := dbConn.SQL.Query(`
+	select 
+		id, name, store_id, image, 
+		price, discount_ratio 
+	from products where discount_ratio != 0.0 order by discount_ratio desc`)
+	if err != nil {
+		return make([]entity.Product, 0), err
+	}
+	defer rows.Close()
+
+	var id, storeId, price int
+	var name, image string
+	var discountRatio float32
+
+	for rows.Next() {
+		err := rows.Scan(&id, &name, &storeId, &image, &price, &discountRatio)
+		if err != nil {
+			// log.Println(err)
+			return make([]entity.Product, 0), err
+		}
+		offersProducts = append(offersProducts, entity.Product{
+			ID:            id,
+			Name:          name,
+			StoreId:       storeId,
+			Image:         image,
+			Price:         price,
+			DiscountRatio: discountRatio,
+		})
+		// fmt.Println("Record is:", userId, deliveryTime, products)
+		if err = rows.Err(); err != nil {
+			// log.Fatal("error Scanning Rows!")
+			return make([]entity.Product, 0), err
+		}
+		// fmt.Println("------------------------")
+	}
+
+	return offersProducts, nil
 }

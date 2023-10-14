@@ -71,6 +71,14 @@ type OrderEditRequest struct {
 	Coupon           CouponAddOrderRequest `json:"coupon"`
 }
 
+type OrderChangeWorkerIdRequest struct {
+	ID               int  `json:"id" binding:"required"`
+	DeliveryWorkerId int  `json:"delivery_worker_id" binding:"required"`
+	Ordered          bool `json:"ordered"`
+	OnTheWay         bool `json:"on_the_way"`
+	Finished         bool `json:"finished"`
+}
+
 // Addons       string         `json:"addons"`
 // AddonsCost       float32        `json:"addons_cost"`
 // State            OrderState `json:"state"`

@@ -19,6 +19,7 @@ type SliderService interface {
 
 type sliderService struct {
 	sliders []entity.Slider
+	driver  driver.SliderDriver
 }
 
 func NewSliderService() SliderService {
@@ -26,7 +27,7 @@ func NewSliderService() SliderService {
 }
 
 func (service *sliderService) AddSlider(slider entity.Slider) error {
-	err := driver.AddSlider(slider)
+	err := service.driver.AddSlider(slider)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,7 @@ func (service *sliderService) AddSlider(slider entity.Slider) error {
 }
 
 func (service *sliderService) FindAllSliders() []entity.Slider {
-	allSliders, err := driver.FindAllSliders()
+	allSliders, err := service.driver.FindAllSliders()
 	if err != nil {
 		return make([]entity.Slider, 0)
 	}
@@ -51,7 +52,7 @@ func (service *sliderService) FindAllSliders() []entity.Slider {
 }
 
 func (service *sliderService) FindSlidersByStore(sliderID entity.StoreSliders) ([]entity.Slider, error) {
-	sliders, err := driver.FindSlidersByStore(sliderID.StoreId)
+	sliders, err := service.driver.FindSlidersByStore(sliderID.StoreId)
 	if err != nil {
 		return make([]entity.Slider, 0), err
 	}
@@ -71,7 +72,7 @@ func (service *sliderService) FindSlidersByStore(sliderID entity.StoreSliders) (
 }
 
 func (service *sliderService) FindActiveSliders() []entity.Slider {
-	activeSliders, err := driver.FindActiveSliders()
+	activeSliders, err := service.driver.FindActiveSliders()
 	if err != nil {
 		return make([]entity.Slider, 0)
 	}
@@ -79,7 +80,7 @@ func (service *sliderService) FindActiveSliders() []entity.Slider {
 }
 
 func (service *sliderService) FindNotActiveSliders() []entity.Slider {
-	notActiveSliders, err := driver.FindNotActiveSliders()
+	notActiveSliders, err := service.driver.FindNotActiveSliders()
 	if err != nil {
 		return make([]entity.Slider, 0)
 	}
@@ -110,7 +111,7 @@ func (service *sliderService) FindNotActiveSliders() []entity.Slider {
 // }
 
 func (service *sliderService) EditSlider(sliderEditInfo entity.SliderEditRequest) error {
-	_, err := driver.EditSlider(sliderEditInfo)
+	_, err := service.driver.EditSlider(sliderEditInfo)
 	if err != nil {
 		return err
 	}
@@ -167,7 +168,7 @@ func (service *sliderService) EditSlider(sliderEditInfo entity.SliderEditRequest
 // }
 
 func (service *sliderService) DeleteSlider(sliderDeleteInfo entity.SliderEditRequest) error {
-	err := driver.DeleteSlider(sliderDeleteInfo.ID)
+	err := service.driver.DeleteSlider(sliderDeleteInfo.ID)
 	if err != nil {
 		return err
 	}

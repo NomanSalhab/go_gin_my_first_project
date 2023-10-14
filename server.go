@@ -53,6 +53,10 @@ var (
 	ordersDriver    driver.OrderDriver         = driver.NewOrderDriver()
 	orderService    service.OrderService       = service.NewOrderService(ordersDriver)
 	OrderController controller.OrderController = controller.NewOrderController(orderService)
+
+	homePageDriver     driver.HomePageDriver         = driver.NewHomePageDriver()
+	homePageService    service.HomePageService       = service.NewHomePageService(homePageDriver)
+	homePageController controller.HomePageController = controller.NewHomePageController(homePageService)
 )
 
 func setupLogOutput() {
@@ -1094,6 +1098,20 @@ func main() {
 			}
 		})
 
+		apiOrdersRoutes.GET("/delivery_worker_not_finished/:delivery_worker_id", func(ctx *gin.Context) {
+			deliveryWorkerId := ctx.Param("delivery_worker_id")
+			deliveryWorkerIdValue, err := strconv.Atoi(deliveryWorkerId)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			deliveryWorkerNotFinishedOrders, err := OrderController.FindDeliveryWorkerNotFinishedOrders(deliveryWorkerIdValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"user_not_finished_orders": deliveryWorkerNotFinishedOrders})
+			}
+		})
+
 		apiOrdersRoutes.POST("/add", func(ctx *gin.Context) {
 			err := OrderController.AddOrder(ctx, UserController)
 			if err != nil {
@@ -1149,12 +1167,49 @@ func main() {
 			}
 		})
 
+		apiOrdersRoutes.PUT("/change_worker_id", func(ctx *gin.Context) {
+			err := OrderController.ChangeOrderWorkerId(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "order worker id is set successfully"})
+			}
+		})
+
 		apiOrdersRoutes.DELETE("/delete", func(ctx *gin.Context) {
 			err := OrderController.DeleteOrder(ctx)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{"message": "order is deleted successfully"})
+			}
+		})
+
+	}
+
+	apiHomePageRoutes := server.Group("/api/home_page")
+	{
+		apiHomePageRoutes.GET("/get/:limit/:app_version/:area_id", func(ctx *gin.Context) {
+			limit := ctx.Param("limit")
+			appVersion := ctx.Param("app_version")
+			areaId := ctx.Param("area_id")
+			limitValue, err := strconv.Atoi(limit)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"limit_error": "limit not valid"})
+			}
+			appVersionValue, err := strconv.ParseFloat(appVersion, 32)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"app_version_error": "app version not valid"})
+			}
+			areaIdValue, err := strconv.Atoi(areaId)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"area_id_error": "area id not valid"})
+			}
+			homePage, err := homePageController.GetHomePage(limitValue, float32(appVersionValue), areaIdValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "home_page": homePage})
+			} else {
+				ctx.JSON(200, gin.H{"home_page": homePage})
 			}
 		})
 

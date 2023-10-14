@@ -33,6 +33,7 @@ type UserDriver interface {
 	GetEditUserStatementString(userEditInfo entity.UserEditRequest) string
 
 	EditUserBalanceAndCircles(userId int, deliveryCost int, productsCost int) error
+	EditDeliveryWorkerBalanceAndCircles(userId int, deliveryCost int) error
 }
 
 type userDriver struct {
@@ -566,5 +567,50 @@ func (driver *userDriver) EditUserBalanceAndCircles(userId int, deliveryCost int
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (driver *userDriver) EditDeliveryWorkerBalanceAndCircles(userId int, deliveryCost int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	deliveryWorker, err := driver.FindUser(userId)
+	if err != nil {
+		return err
+	}
+
+	if deliveryWorker.Role == 1 {
+		// time.Now().Day() == 1 && && deliveryWorker.Circles == 0 && deliveryWorker.Balance == 0
+		// balanceIncrease := int(math.Floor(float64(deliveryCost) / float64(1000)))
+		stmt := `UPDATE users SET balance = balance + $1, circles = circles + 1 where id = $2 RETURNING id`
+		result, err := dbConn.SQL.ExecContext(ctx, stmt, deliveryCost, userId)
+		if err != nil {
+			return err
+		}
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return errors.New("user could not be found")
+		}
+		_, err = driver.FindUser(userId)
+		if err != nil {
+			return err
+		}
+	}
+	/* else {
+		stmt := `UPDATE users SET balance = $1, circles = 1 where id = $3 RETURNING id`
+		result, err := dbConn.SQL.ExecContext(ctx, stmt, deliveryCost, userId)
+		if err != nil {
+			return err
+		}
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return errors.New("user could not be found")
+		}
+		_, err = driver.FindUser(userId)
+		if err != nil {
+			return err
+		}
+	} */
+
 	return nil
 }

@@ -16,6 +16,7 @@ type StoreDriver interface {
 	FindNotActiveStores() ([]entity.Store, error)
 	FindStoreCategoryStores(wantedId int) ([]entity.Store, error)
 	FindStore(wantedId int) (entity.Store, error)
+	FindBestSellingStores(storesCountLimit int, wantedAreaId int) ([]entity.Store, error)
 	AddStore(store entity.Store) error
 	DeleteStore(wantedId int) error
 	EditStore(storeEditInfo entity.StoreEditRequest) (entity.Store, error)
@@ -380,13 +381,13 @@ func (driver *storeDriver) EditStoreBalance(storeInfo entity.StoreIncreaseBalanc
 	return nil
 }
 
-func (driver *storeDriver) FindBestSellingStores(storesCountLimit int) ([]entity.Store, error) {
+func (driver *storeDriver) FindBestSellingStores(storesCountLimit int, wantedAreaId int) ([]entity.Store, error) {
 	stores := make([]entity.Store, 0)
 	rows, err := dbConn.SQL.Query(`select 
 	id, name, store_category_id, 
 	image, balance, active, 
 	delivery_rent, discount, area_id 
-	from stores order by balance desc limit $1`, storesCountLimit)
+	from stores where area_id = $1 order by balance desc limit $2`, wantedAreaId, storesCountLimit)
 	if err != nil {
 		return make([]entity.Store, 0), err
 	}
