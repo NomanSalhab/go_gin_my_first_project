@@ -753,6 +753,9 @@ func (driver *orderDriver) FinishOrder(orderId int) error {
 	if order.Finished {
 		return errors.New("order is already finished")
 	}
+	if order.DeliveryWorkerId == 0 {
+		return errors.New("order is not set to delivery worker")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()

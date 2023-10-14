@@ -287,7 +287,7 @@ func (driver *userDriver) FindUserCircles(wantedId int) (entity.UserCirclesRespo
 }
 
 func (driver *userDriver) FindUserRateAndCircles(wantedId int) (entity.UserCirclesResponse, error) {
-	rows, err := dbConn.SQL.Query("select row_number() over(order by circles desc), id, circles from users")
+	rows, err := dbConn.SQL.Query("select row_number() over(order by circles desc), id, circles from users where role = 0")
 	if err != nil {
 		return entity.UserCirclesResponse{
 			Circles: 0,
@@ -325,9 +325,9 @@ func (driver *userDriver) FindUserRateAndCircles(wantedId int) (entity.UserCircl
 	}
 
 	return entity.UserCirclesResponse{
-		Circles: circles,
-		Rate:    rate,
-	}, nil
+		Circles: 0,
+		Rate:    10000,
+	}, errors.New("user is not a customer or can not be found")
 }
 
 func (driver *userDriver) DeleteUser(wantedId int) error {
@@ -511,6 +511,29 @@ func (driver *userDriver) GetEditUserStatementString(userEditInfo entity.UserEdi
 	return stmt
 }
 
+func (driver *userDriver) EditUserDiscount(userInfo entity.User) (entity.User, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE users SET user_discount = $1 where id = $2 RETURNING *`
+	// fmt.Println("Statement Is:", stmt)
+
+	result, err := dbConn.SQL.ExecContext(ctx, stmt, userInfo.UserDiscount, userInfo.ID)
+	if err != nil {
+		return entity.User{}, err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return entity.User{}, errors.New("user could not be found")
+	}
+	user, err := driver.FindUser(userInfo.ID)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
+}
+
 func (driver *userDriver) ActivateUser(userInfo entity.UserInfoRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
@@ -566,6 +589,18 @@ func (driver *userDriver) EditUserBalanceAndCircles(userId int, deliveryCost int
 	_, err = driver.FindUser(userId)
 	if err != nil {
 		return err
+	}
+	rateAndCircles, _ := driver.FindUserRateAndCircles(userId)
+	fmt.Println("User ID:", userId)
+	fmt.Println("Rate and Circles:", rateAndCircles)
+	if rateAndCircles.Rate == 1 {
+		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.75})
+	} else if rateAndCircles.Rate == 2 {
+		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.5})
+	} else if rateAndCircles.Rate == 3 {
+		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.25})
+	} else {
+		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.0})
 	}
 	return nil
 }
