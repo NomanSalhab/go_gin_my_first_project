@@ -8,7 +8,26 @@ import (
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 )
 
-func FindAllStoreCategories() ([]entity.StoreCategory, error) {
+type StoreCategoryDriver interface {
+	FindAllStoreCategories() ([]entity.StoreCategory, error)
+	FindActiveStoreCategories() ([]entity.StoreCategory, error)
+	FindNotActiveStoreCategories() ([]entity.StoreCategory, error)
+	FindStoreCategory(wantedId int) (entity.StoreCategory, error)
+	AddStoreCategory(storeCategory entity.StoreCategory) error
+	DeleteStoreCategory(wantedId int) error
+	EditStoreCategory(storeCategoryEditInfo entity.StoreCategoryEditRequest) (entity.StoreCategory, error)
+	ActivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error
+	DeactivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error
+}
+
+type storeCategoryDriver struct {
+}
+
+func NewStoreCategoryDriver() StoreCategoryDriver {
+	return &storeCategoryDriver{}
+}
+
+func (driver *storeCategoryDriver) FindAllStoreCategories() ([]entity.StoreCategory, error) {
 	storeCategories := make([]entity.StoreCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, active from store_categories")
 	if err != nil {
@@ -42,7 +61,7 @@ func FindAllStoreCategories() ([]entity.StoreCategory, error) {
 	return storeCategories, nil
 }
 
-func FindActiveStoreCategories() ([]entity.StoreCategory, error) {
+func (driver *storeCategoryDriver) FindActiveStoreCategories() ([]entity.StoreCategory, error) {
 	storeCategories := make([]entity.StoreCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, active from store_categories where active = true")
 	if err != nil {
@@ -76,7 +95,7 @@ func FindActiveStoreCategories() ([]entity.StoreCategory, error) {
 	return storeCategories, nil
 }
 
-func FindNotActiveStoreCategories() ([]entity.StoreCategory, error) {
+func (driver *storeCategoryDriver) FindNotActiveStoreCategories() ([]entity.StoreCategory, error) {
 	storeCategories := make([]entity.StoreCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, active from store_categories where active = false")
 	if err != nil {
@@ -110,7 +129,7 @@ func FindNotActiveStoreCategories() ([]entity.StoreCategory, error) {
 	return storeCategories, nil
 }
 
-func FindStoreCategory(wantedId int) (entity.StoreCategory, error) {
+func (driver *storeCategoryDriver) FindStoreCategory(wantedId int) (entity.StoreCategory, error) {
 
 	query := `select id, name, active from store_categories where id = $1`
 	var id int
@@ -133,7 +152,7 @@ func FindStoreCategory(wantedId int) (entity.StoreCategory, error) {
 	return user, nil
 }
 
-func AddStoreCategory(storeCategory entity.StoreCategory) error {
+func (driver *storeCategoryDriver) AddStoreCategory(storeCategory entity.StoreCategory) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -153,7 +172,7 @@ func AddStoreCategory(storeCategory entity.StoreCategory) error {
 	return nil
 }
 
-func DeleteStoreCategory(wantedId int) error {
+func (driver *storeCategoryDriver) DeleteStoreCategory(wantedId int) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -172,7 +191,7 @@ func DeleteStoreCategory(wantedId int) error {
 	return nil
 }
 
-func EditStoreCategory(storeCategoryEditInfo entity.StoreCategoryEditRequest) (entity.StoreCategory, error) {
+func (driver *storeCategoryDriver) EditStoreCategory(storeCategoryEditInfo entity.StoreCategoryEditRequest) (entity.StoreCategory, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -187,14 +206,14 @@ func EditStoreCategory(storeCategoryEditInfo entity.StoreCategoryEditRequest) (e
 	if rowsAffected == 0 {
 		return entity.StoreCategory{}, errors.New("store category could not be found")
 	}
-	storeCategory, err := FindStoreCategory(storeCategoryEditInfo.ID)
+	storeCategory, err := driver.FindStoreCategory(storeCategoryEditInfo.ID)
 	if err != nil {
 		return entity.StoreCategory{}, err
 	}
 	return storeCategory, nil
 }
 
-func ActivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
+func (driver *storeCategoryDriver) ActivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -212,7 +231,7 @@ func ActivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest
 	return nil
 }
 
-func DeactivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
+func (driver *storeCategoryDriver) DeactivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()

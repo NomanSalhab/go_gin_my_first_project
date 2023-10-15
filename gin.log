@@ -100,10 +100,29 @@
 [GIN-debug] PUT    /api/orders/change_worker_id --> main.main.func96 (5 handlers)
 [GIN-debug] DELETE /api/orders/delete        --> main.main.func97 (5 handlers)
 [GIN-debug] GET    /api/home_page/get/:limit/:app_version/:area_id --> main.main.func98 (5 handlers)
+[GIN-debug] GET    /api/complaints/all       --> main.main.func99 (5 handlers)
+[GIN-debug] GET    /api/complaints/about_delivery --> main.main.func100 (5 handlers)
+[GIN-debug] GET    /api/complaints/about_the_app --> main.main.func101 (5 handlers)
+[GIN-debug] GET    /api/complaints/improvement_suggestion --> main.main.func102 (5 handlers)
+[GIN-debug] GET    /api/complaints/other_reason --> main.main.func103 (5 handlers)
+[GIN-debug] POST   /api/complaints/add       --> main.main.func104 (5 handlers)
+[GIN-debug] DELETE /api/complaints/delete    --> main.main.func105 (5 handlers)
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [14 Oct 23 19:46 +03] GET /api/sliders/active 200 117.9938ms 
-::1 - [14 Oct 23 19:46 +03] POST /api/sliders/store_sliders 200 124.6841ms 
-::1 - [14 Oct 23 19:46 +03] POST /api/sliders/store_sliders 200 122.9736ms 
-::1 - [14 Oct 23 19:47 +03] GET /api/sliders/all 200 115.4463ms 
+::1 - [15 Oct 23 20:56 +03] GET /api/areas/all 200 150.7616ms 
+::1 - [15 Oct 23 20:56 +03] GET /api/areas/active 200 127.8971ms 
+::1 - [15 Oct 23 20:57 +03] GET /api/areas/not_active 200 122.2831ms 
+::1 - [15 Oct 23 20:57 +03] POST /api/areas/add 200 199.4185ms 
+::1 - [15 Oct 23 20:57 +03] GET /api/areas/all 200 134.4519ms 
+::1 - [15 Oct 23 20:57 +03] PUT /api/areas/edit 400 121.1768ms 
+::1 - [15 Oct 23 20:57 +03] PUT /api/areas/edit 200 119.1892ms 
+::1 - [15 Oct 23 20:57 +03] GET /api/areas/all 200 111.914ms 
+::1 - [15 Oct 23 20:57 +03] GET /api/product_categories/all 200 129.6528ms 
+::1 - [15 Oct 23 20:57 +03] GET /api/product_categories/active 200 113.0045ms 
+::1 - [15 Oct 23 20:58 +03] POST /api/product_categories/add 200 133.9555ms 
+::1 - [15 Oct 23 20:58 +03] GET /api/product_categories/active 200 122.7392ms 
+::1 - [15 Oct 23 20:58 +03] GET /api/store_categories/all 200 118.5886ms 
+::1 - [15 Oct 23 20:58 +03] POST /api/store_categories/add 200 122.7596ms 
+::1 - [15 Oct 23 20:59 +03] GET /api/store_categories/all 200 131.9997ms 
+::1 - [15 Oct 23 20:59 +03] GET /api/complaints/all 200 126.2107ms 

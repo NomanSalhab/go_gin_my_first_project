@@ -22,26 +22,33 @@ var (
 	userService    service.UserService       = service.NewUserService(userDriver)
 	UserController controller.UserController = controller.NewUserController(userService)
 
-	storeCategoryService    service.StoreCategoryService       = service.NewStoreCategoryService()
+	storeCategoryDriver     driver.StoreCategoryDriver         = driver.NewStoreCategoryDriver()
+	storeCategoryService    service.StoreCategoryService       = service.NewStoreCategoryService(storeCategoryDriver)
 	StoreCategoryController controller.StoreCategoryController = controller.NewStoreCategoryController(storeCategoryService)
 
 	storeDriver     driver.StoreDriver         = driver.NewStoreDriver()
 	storeService    service.StoreService       = service.NewStoreService(storeDriver)
 	StoreController controller.StoreController = controller.NewStoreController(storeService)
 
-	productCategortService    service.ProductCategoryService       = service.NewProductCategoryService()
-	ProductCategoryController controller.ProductCategoryController = controller.NewProductCategoryController(productCategortService)
+	productCategoryDriver     driver.ProductCategoryDriver         = driver.NewProductCategoryDriver()
+	productCategoryService    service.ProductCategoryService       = service.NewProductCategoryService(productCategoryDriver)
+	ProductCategoryController controller.ProductCategoryController = controller.NewProductCategoryController(productCategoryService)
 
 	sliderDriver     driver.SliderDriver         = driver.NewSliderDriver()
 	sliderService    service.SliderService       = service.NewSliderService(sliderDriver)
 	sliderController controller.SliderController = controller.NewSliderController(sliderService)
 
-	areaService    service.AreaService       = service.NewAreaService()
+	areaDriver     driver.AreaDriver         = driver.NewAreaDriver()
+	areaService    service.AreaService       = service.NewAreaService(areaDriver)
 	areaController controller.AreaController = controller.NewAreaController(areaService)
 
 	detailsDriver    driver.DetailDriver         = driver.NewDetailDriver()
 	detailService    service.DetailService       = service.NewDetailService(detailsDriver)
 	detailController controller.DetailController = controller.NewDetailController(detailService)
+
+	complaintsDriver    driver.ComplaintDriver         = driver.NewComplaintDriver()
+	complaintService    service.ComplaintService       = service.NewComplaintService(complaintsDriver)
+	complaintController controller.ComplaintController = controller.NewComplaintController(complaintService)
 
 	couponsDriver    driver.CouponDriver         = driver.NewCouponDriver()
 	couponService    service.CouponService       = service.NewCouponService(couponsDriver)
@@ -1211,6 +1218,68 @@ func main() {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "home_page": homePage})
 			} else {
 				ctx.JSON(200, gin.H{"home_page": homePage})
+			}
+		})
+
+	}
+
+	apiComplaintsRoutes := server.Group("/api/complaints")
+	{
+		apiComplaintsRoutes.GET("/all", func(ctx *gin.Context) {
+			allComplaints, err := complaintController.FindAllComplaints()
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			ctx.JSON(200, gin.H{"all_complaints": allComplaints})
+		})
+
+		apiComplaintsRoutes.GET("/about_delivery", func(ctx *gin.Context) {
+			aboutDeliveryComplaints, err := complaintController.FindAboutDeliveryComplaints()
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			ctx.JSON(200, gin.H{"about_delivery_complaints": aboutDeliveryComplaints})
+		})
+
+		apiComplaintsRoutes.GET("/about_the_app", func(ctx *gin.Context) {
+			aboutTheAppComplaints, err := complaintController.FindAboutTheAppComplaints()
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			ctx.JSON(200, gin.H{"about_the_app_complaints": aboutTheAppComplaints})
+		})
+
+		apiComplaintsRoutes.GET("/improvement_suggestion", func(ctx *gin.Context) {
+			improvementSuggestionComplaints, err := complaintController.FindImprovementSuggestionComplaints()
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			ctx.JSON(200, gin.H{"improvement_suggestion_complaints": improvementSuggestionComplaints})
+		})
+
+		apiComplaintsRoutes.GET("/other_reason", func(ctx *gin.Context) {
+			otherReasonComplaints, err := complaintController.FindOtherReasonComplaints()
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			ctx.JSON(200, gin.H{"other_reason_complaints": otherReasonComplaints})
+		})
+
+		apiComplaintsRoutes.POST("/add", func(ctx *gin.Context) {
+			err := complaintController.AddComplaint(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "complaint added successfully!"})
+			}
+		})
+
+		apiComplaintsRoutes.DELETE("/delete", func(ctx *gin.Context) {
+			err := complaintController.DeleteComplaint(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "complaint is deleted successfully"})
 			}
 		})
 

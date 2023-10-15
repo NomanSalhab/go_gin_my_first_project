@@ -24,14 +24,17 @@ type ProductCategoryService interface {
 
 type productCategoryService struct {
 	productCategories []entity.ProductCategory
+	driver            driver.ProductCategoryDriver
 }
 
-func NewProductCategoryService() ProductCategoryService {
-	return &productCategoryService{}
+func NewProductCategoryService(driver driver.ProductCategoryDriver) ProductCategoryService {
+	return &productCategoryService{
+		driver: driver,
+	}
 }
 
 func (service *productCategoryService) AddProductCategory(productCategory entity.ProductCategory) error {
-	productCategoriesList, err := driver.FindAllProductCategories()
+	productCategoriesList, err := service.driver.FindAllProductCategories()
 	if err != nil {
 		return err
 	}
@@ -40,7 +43,7 @@ func (service *productCategoryService) AddProductCategory(productCategory entity
 			return errors.New("product category name with store_id already exists")
 		}
 	}
-	err = driver.AddProductCategory(productCategory)
+	err = service.driver.AddProductCategory(productCategory)
 	if err != nil {
 		return err
 	}
@@ -61,7 +64,7 @@ func (service *productCategoryService) AddProductCategory(productCategory entity
 }
 
 func (service *productCategoryService) FindAllProductCategories() []entity.ProductCategory {
-	allProductCategories, err := driver.FindAllProductCategories()
+	allProductCategories, err := service.driver.FindAllProductCategories()
 	if err != nil {
 		return make([]entity.ProductCategory, 0)
 	}
@@ -70,7 +73,7 @@ func (service *productCategoryService) FindAllProductCategories() []entity.Produ
 }
 
 func (service *productCategoryService) FindActiveProductCategories() []entity.ProductCategory {
-	activeProductCategories, err := driver.FindActiveProductCategories()
+	activeProductCategories, err := service.driver.FindActiveProductCategories()
 	if err != nil {
 		return make([]entity.ProductCategory, 0)
 	}
@@ -85,7 +88,7 @@ func (service *productCategoryService) FindActiveProductCategories() []entity.Pr
 }
 
 func (service *productCategoryService) FindNotActiveProductCategories() []entity.ProductCategory {
-	notActiveProductCategories, err := driver.FindNotActiveProductCategories()
+	notActiveProductCategories, err := service.driver.FindNotActiveProductCategories()
 	if err != nil {
 		return make([]entity.ProductCategory, 0)
 	}
@@ -100,7 +103,7 @@ func (service *productCategoryService) FindNotActiveProductCategories() []entity
 }
 
 func (service *productCategoryService) FindProductCategory(id entity.ProductCategoryInfoRequest) (entity.ProductCategory, error) {
-	productCategory, _ := driver.FindProductCategory(id.ID)
+	productCategory, _ := service.driver.FindProductCategory(id.ID)
 	if productCategory.Name == "" {
 		return productCategory, errors.New("the product category couldn't be found")
 	}
@@ -121,7 +124,7 @@ func (service *productCategoryService) FindProductCategory(id entity.ProductCate
 }
 
 func (service *productCategoryService) FindProductCategoryByStore(productCategoryId entity.ProductCategoriesByStoreInfoRequest) ([]entity.ProductCategory, error) {
-	storeProductCategories, err := driver.FindProductCategoryByStore(productCategoryId.StoreId)
+	storeProductCategories, err := service.driver.FindProductCategoryByStore(productCategoryId.StoreId)
 	if err != nil {
 		return make([]entity.ProductCategory, 0), err
 	}
@@ -141,7 +144,7 @@ func (service *productCategoryService) FindProductCategoryByStore(productCategor
 }
 
 func (service *productCategoryService) EditProductCategory(productCategoryEditInfo entity.ProductCategoryEditRequest) error {
-	_, err := driver.EditProductCategory(productCategoryEditInfo)
+	_, err := service.driver.EditProductCategory(productCategoryEditInfo)
 	if err != nil {
 		return err
 	}
@@ -167,7 +170,7 @@ func (service *productCategoryService) EditProductCategory(productCategoryEditIn
 }
 
 func (service *productCategoryService) ActivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error {
-	err := driver.ActivateProductCategory(productCategoryEditInfo)
+	err := service.driver.ActivateProductCategory(productCategoryEditInfo)
 	if err != nil {
 		return err
 	}
@@ -187,7 +190,7 @@ func (service *productCategoryService) ActivateProductCategory(productCategoryEd
 }
 
 func (service *productCategoryService) DeactivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error {
-	err := driver.DeactivateProductCategory(productCategoryEditInfo)
+	err := service.driver.DeactivateProductCategory(productCategoryEditInfo)
 	if err != nil {
 		return err
 	}
@@ -207,7 +210,7 @@ func (service *productCategoryService) DeactivateProductCategory(productCategory
 }
 
 func (service *productCategoryService) DeleteProductCategory(productCategoryId entity.ProductCategoryDeleteRequest) error {
-	err := driver.DeleteProductCategory(productCategoryId.ID)
+	err := service.driver.DeleteProductCategory(productCategoryId.ID)
 	if err != nil {
 		return err
 	}

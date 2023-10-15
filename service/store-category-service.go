@@ -23,14 +23,17 @@ type StoreCategoryService interface {
 
 type storeCategoryService struct {
 	storeCategories []entity.StoreCategory
+	driver          driver.StoreCategoryDriver
 }
 
-func NewStoreCategoryService() StoreCategoryService {
-	return &storeCategoryService{}
+func NewStoreCategoryService(driver driver.StoreCategoryDriver) StoreCategoryService {
+	return &storeCategoryService{
+		driver: driver,
+	}
 }
 
 func (service *storeCategoryService) AddStoreCategory(storeCategory entity.StoreCategory) error {
-	storeCategoriesList, err := driver.FindAllStoreCategories()
+	storeCategoriesList, err := service.driver.FindAllStoreCategories()
 	if err != nil {
 		return err
 	}
@@ -39,7 +42,7 @@ func (service *storeCategoryService) AddStoreCategory(storeCategory entity.Store
 			return errors.New("store category name already exists")
 		}
 	}
-	err = driver.AddStoreCategory(storeCategory)
+	err = service.driver.AddStoreCategory(storeCategory)
 	if err != nil {
 		return err
 	}
@@ -60,7 +63,7 @@ func (service *storeCategoryService) AddStoreCategory(storeCategory entity.Store
 }
 
 func (service *storeCategoryService) FindAllStoreCategories() []entity.StoreCategory {
-	allStoreCategories, err := driver.FindAllStoreCategories()
+	allStoreCategories, err := service.driver.FindAllStoreCategories()
 	if err != nil {
 		return make([]entity.StoreCategory, 0)
 	}
@@ -69,7 +72,7 @@ func (service *storeCategoryService) FindAllStoreCategories() []entity.StoreCate
 }
 
 func (service *storeCategoryService) FindActiveStoreCategories() []entity.StoreCategory {
-	activeStoreCategories, err := driver.FindActiveStoreCategories()
+	activeStoreCategories, err := service.driver.FindActiveStoreCategories()
 	if err != nil {
 		return make([]entity.StoreCategory, 0)
 	}
@@ -84,7 +87,7 @@ func (service *storeCategoryService) FindActiveStoreCategories() []entity.StoreC
 }
 
 func (service *storeCategoryService) FindNotActiveStoreCategories() []entity.StoreCategory {
-	notActiveStoreCategories, err := driver.FindNotActiveStoreCategories()
+	notActiveStoreCategories, err := service.driver.FindNotActiveStoreCategories()
 	if err != nil {
 		return make([]entity.StoreCategory, 0)
 	}
@@ -99,7 +102,7 @@ func (service *storeCategoryService) FindNotActiveStoreCategories() []entity.Sto
 }
 
 func (service *storeCategoryService) FindStoreCategory(id entity.StoreCategoryInfoRequest) (entity.StoreCategory, error) {
-	storeCategory, _ := driver.FindStoreCategory(id.ID)
+	storeCategory, _ := service.driver.FindStoreCategory(id.ID)
 	if storeCategory.Name == "" {
 		return storeCategory, errors.New("the store category couldn't be found")
 	}
@@ -120,7 +123,7 @@ func (service *storeCategoryService) FindStoreCategory(id entity.StoreCategoryIn
 }
 
 func (service *storeCategoryService) EditStoreCategory(storeCategoryEditInfo entity.StoreCategoryEditRequest) error {
-	_, err := driver.EditStoreCategory(storeCategoryEditInfo)
+	_, err := service.driver.EditStoreCategory(storeCategoryEditInfo)
 	if err != nil {
 		return err
 	}
@@ -143,7 +146,7 @@ func (service *storeCategoryService) EditStoreCategory(storeCategoryEditInfo ent
 }
 
 func (service *storeCategoryService) ActivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
-	err := driver.ActivateStoreCategory(storeCategoryEditInfo)
+	err := service.driver.ActivateStoreCategory(storeCategoryEditInfo)
 	if err != nil {
 		return err
 	}
@@ -165,7 +168,7 @@ func (service *storeCategoryService) ActivateStoreCategory(storeCategoryEditInfo
 }
 
 func (service *storeCategoryService) DeactivateStoreCategory(storeCategoryEditInfo entity.StoreCategoryInfoRequest) error {
-	err := driver.DeactivateStoreCategory(storeCategoryEditInfo)
+	err := service.driver.DeactivateStoreCategory(storeCategoryEditInfo)
 	if err != nil {
 		return err
 	}
@@ -187,7 +190,7 @@ func (service *storeCategoryService) DeactivateStoreCategory(storeCategoryEditIn
 }
 
 func (service *storeCategoryService) DeleteStoreCategory(storeCategoryDeleteInfo entity.StoreCategoryDeleteRequest) error {
-	err := driver.DeleteStoreCategory(storeCategoryDeleteInfo.ID)
+	err := service.driver.DeleteStoreCategory(storeCategoryDeleteInfo.ID)
 	if err != nil {
 		return err
 	}

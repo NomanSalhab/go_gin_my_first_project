@@ -19,14 +19,17 @@ type AreaService interface {
 	FindNotActiveAreas() []entity.Area
 }
 
-type areaService struct{}
+type areaService struct {
+	driver driver.AreaDriver
+}
 
-func NewAreaService() AreaService {
-	return &areaService{}
+func NewAreaService(driver driver.AreaDriver) AreaService {
+	return &areaService{
+		driver: driver}
 }
 
 func (service *areaService) AddArea(area entity.Area) error {
-	areasList, err := driver.FindAllAreas()
+	areasList, err := service.driver.FindAllAreas()
 	if err != nil {
 		return err
 	}
@@ -35,23 +38,15 @@ func (service *areaService) AddArea(area entity.Area) error {
 			return errors.New("area name already exists")
 		}
 	}
-	err = driver.AddArea(area)
+	err = service.driver.AddArea(area)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// func (service *areaService) FindArea(id entity.AreaEditRequest) (entity.Area, error) {
-// 	area, _ := driver.FindArea(id.ID)
-// 	if area.Name == "" {
-// 		return area, errors.New("the area couldn't be found")
-// 	}
-// 	return area, nil
-// }
-
 func (service *areaService) EditArea(areaEditInfo entity.AreaEditRequest) error {
-	_, err := driver.EditArea(areaEditInfo)
+	_, err := service.driver.EditArea(areaEditInfo)
 	if err != nil {
 		return err
 	}
@@ -59,7 +54,7 @@ func (service *areaService) EditArea(areaEditInfo entity.AreaEditRequest) error 
 }
 
 func (service *areaService) ActivateArea(areaEditInfo entity.AreaActivateRequest) error {
-	err := driver.ActivateArea(areaEditInfo)
+	err := service.driver.ActivateArea(areaEditInfo)
 	if err != nil {
 		return err
 	}
@@ -67,7 +62,7 @@ func (service *areaService) ActivateArea(areaEditInfo entity.AreaActivateRequest
 }
 
 func (service *areaService) DeactivateArea(areaEditInfo entity.AreaDeactivateRequest) error {
-	err := driver.DeactivateArea(areaEditInfo)
+	err := service.driver.DeactivateArea(areaEditInfo)
 	if err != nil {
 		return err
 	}
@@ -75,7 +70,7 @@ func (service *areaService) DeactivateArea(areaEditInfo entity.AreaDeactivateReq
 }
 
 func (service *areaService) DeleteArea(areaDeleteInfo entity.AreaEditRequest) error {
-	err := driver.DeleteArea(areaDeleteInfo.ID)
+	err := service.driver.DeleteArea(areaDeleteInfo.ID)
 	if err != nil {
 		return err
 	}
@@ -83,7 +78,7 @@ func (service *areaService) DeleteArea(areaDeleteInfo entity.AreaEditRequest) er
 }
 
 func (service *areaService) FindAllAreas() []entity.Area {
-	areas, err := driver.FindAllAreas()
+	areas, err := service.driver.FindAllAreas()
 	if err != nil {
 		return make([]entity.Area, 0)
 	}
@@ -91,7 +86,7 @@ func (service *areaService) FindAllAreas() []entity.Area {
 }
 
 func (service *areaService) FindActiveAreas() []entity.Area {
-	activeAreas, err := driver.FindActiveAreas()
+	activeAreas, err := service.driver.FindActiveAreas()
 	if err != nil {
 		return make([]entity.Area, 0)
 	}
@@ -99,7 +94,7 @@ func (service *areaService) FindActiveAreas() []entity.Area {
 }
 
 func (service *areaService) FindNotActiveAreas() []entity.Area {
-	notActiveAreas, err := driver.FindNotActiveAreas()
+	notActiveAreas, err := service.driver.FindNotActiveAreas()
 	if err != nil {
 		return make([]entity.Area, 0)
 	}

@@ -9,7 +9,28 @@ import (
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 )
 
-func FindAllAreas() ([]entity.Area, error) {
+type AreaDriver interface {
+	FindAllAreas() ([]entity.Area, error)
+	FindActiveAreas() ([]entity.Area, error)
+	FindNotActiveAreas() ([]entity.Area, error)
+
+	AddArea(area entity.Area) error
+	DeleteArea(wantedId int) error
+	EditArea(areaEditInfo entity.AreaEditRequest) (entity.Area, error)
+
+	ActivateArea(areaEditInfo entity.AreaActivateRequest) error
+	DeactivateArea(areaEditInfo entity.AreaDeactivateRequest) error
+}
+
+type areaDriver struct {
+	// cacheAreas []entity.AreaEditRequest
+}
+
+func NewAreaDriver() AreaDriver {
+	return &areaDriver{}
+}
+
+func (driver *areaDriver) FindAllAreas() ([]entity.Area, error) {
 	areas := make([]entity.Area, 0)
 	rows, err := dbConn.SQL.Query("select id, name, lat, long, active from areas")
 	if err != nil {
@@ -42,7 +63,7 @@ func FindAllAreas() ([]entity.Area, error) {
 	return areas, nil
 }
 
-func FindActiveAreas() ([]entity.Area, error) {
+func (driver *areaDriver) FindActiveAreas() ([]entity.Area, error) {
 	areas := make([]entity.Area, 0)
 	rows, err := dbConn.SQL.Query("select id, name, lat, long, active from areas where active = true")
 	if err != nil {
@@ -75,7 +96,7 @@ func FindActiveAreas() ([]entity.Area, error) {
 	return areas, nil
 }
 
-func FindNotActiveAreas() ([]entity.Area, error) {
+func (driver *areaDriver) FindNotActiveAreas() ([]entity.Area, error) {
 	areas := make([]entity.Area, 0)
 	rows, err := dbConn.SQL.Query("select id, name, lat, long, active from areas where active = false")
 	if err != nil {
@@ -108,7 +129,7 @@ func FindNotActiveAreas() ([]entity.Area, error) {
 	return areas, nil
 }
 
-func AddArea(area entity.Area) error {
+func (driver *areaDriver) AddArea(area entity.Area) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -128,7 +149,7 @@ func AddArea(area entity.Area) error {
 	return nil
 }
 
-func DeleteArea(wantedId int) error {
+func (driver *areaDriver) DeleteArea(wantedId int) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -147,7 +168,7 @@ func DeleteArea(wantedId int) error {
 	return nil
 }
 
-func EditArea(areaEditInfo entity.AreaEditRequest) (entity.Area, error) {
+func (driver *areaDriver) EditArea(areaEditInfo entity.AreaEditRequest) (entity.Area, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -185,7 +206,7 @@ func GetEditAreaStatementString(areaEditInfo entity.AreaEditRequest) string {
 	return stmt
 }
 
-func ActivateArea(areaEditInfo entity.AreaActivateRequest) error {
+func (driver *areaDriver) ActivateArea(areaEditInfo entity.AreaActivateRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -203,7 +224,7 @@ func ActivateArea(areaEditInfo entity.AreaActivateRequest) error {
 	return nil
 }
 
-func DeactivateArea(areaEditInfo entity.AreaDeactivateRequest) error {
+func (driver *areaDriver) DeactivateArea(areaEditInfo entity.AreaDeactivateRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()

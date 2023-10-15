@@ -9,7 +9,28 @@ import (
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
 )
 
-func FindAllProductCategories() ([]entity.ProductCategory, error) {
+type ProductCategoryDriver interface {
+	FindAllProductCategories() ([]entity.ProductCategory, error)
+	FindActiveProductCategories() ([]entity.ProductCategory, error)
+	FindNotActiveProductCategories() ([]entity.ProductCategory, error)
+	FindProductCategoryByStore(wantedId int) ([]entity.ProductCategory, error)
+	FindProductCategory(wantedId int) (entity.ProductCategory, error)
+	AddProductCategory(productCategory entity.ProductCategory) error
+	DeleteProductCategory(wantedId int) error
+	EditProductCategory(productCategoryEditInfo entity.ProductCategoryEditRequest) (entity.ProductCategory, error)
+	GetEditProductCategoryStatementString(productEditInfo entity.ProductCategoryEditRequest) string
+	ActivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error
+	DeactivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error
+}
+
+type productCategoryDriver struct {
+}
+
+func NewProductCategoryDriver() ProductCategoryDriver {
+	return &productCategoryDriver{}
+}
+
+func (driver *productCategoryDriver) FindAllProductCategories() ([]entity.ProductCategory, error) {
 	productCategories := make([]entity.ProductCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, store_id, active from product_categories")
 	if err != nil {
@@ -40,7 +61,7 @@ func FindAllProductCategories() ([]entity.ProductCategory, error) {
 	return productCategories, nil
 }
 
-func FindActiveProductCategories() ([]entity.ProductCategory, error) {
+func (driver *productCategoryDriver) FindActiveProductCategories() ([]entity.ProductCategory, error) {
 	productCategories := make([]entity.ProductCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, store_id, active from product_categories where active = true")
 	if err != nil {
@@ -71,7 +92,7 @@ func FindActiveProductCategories() ([]entity.ProductCategory, error) {
 	return productCategories, nil
 }
 
-func FindNotActiveProductCategories() ([]entity.ProductCategory, error) {
+func (driver *productCategoryDriver) FindNotActiveProductCategories() ([]entity.ProductCategory, error) {
 	productCategories := make([]entity.ProductCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, store_id, active from product_categories where active = false")
 	if err != nil {
@@ -102,7 +123,7 @@ func FindNotActiveProductCategories() ([]entity.ProductCategory, error) {
 	return productCategories, nil
 }
 
-func FindProductCategoryByStore(wantedId int) ([]entity.ProductCategory, error) {
+func (driver *productCategoryDriver) FindProductCategoryByStore(wantedId int) ([]entity.ProductCategory, error) {
 	productCategories := make([]entity.ProductCategory, 0)
 	rows, err := dbConn.SQL.Query("select id, name, store_id, active from product_categories where store_id = $1", wantedId)
 	if err != nil {
@@ -133,7 +154,7 @@ func FindProductCategoryByStore(wantedId int) ([]entity.ProductCategory, error) 
 	return productCategories, nil
 }
 
-func FindProductCategory(wantedId int) (entity.ProductCategory, error) {
+func (driver *productCategoryDriver) FindProductCategory(wantedId int) (entity.ProductCategory, error) {
 
 	query := `select id, name, store_id, active from product_categories where id = $1`
 	var id, storeId int
@@ -158,7 +179,7 @@ func FindProductCategory(wantedId int) (entity.ProductCategory, error) {
 	return user, nil
 }
 
-func AddProductCategory(productCategory entity.ProductCategory) error {
+func (driver *productCategoryDriver) AddProductCategory(productCategory entity.ProductCategory) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -178,7 +199,7 @@ func AddProductCategory(productCategory entity.ProductCategory) error {
 	return nil
 }
 
-func DeleteProductCategory(wantedId int) error {
+func (driver *productCategoryDriver) DeleteProductCategory(wantedId int) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -197,12 +218,12 @@ func DeleteProductCategory(wantedId int) error {
 	return nil
 }
 
-func EditProductCategory(productCategoryEditInfo entity.ProductCategoryEditRequest) (entity.ProductCategory, error) {
+func (driver *productCategoryDriver) EditProductCategory(productCategoryEditInfo entity.ProductCategoryEditRequest) (entity.ProductCategory, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
-	stmt := GetEditProductCategoryStatementString(productCategoryEditInfo)
+	stmt := driver.GetEditProductCategoryStatementString(productCategoryEditInfo)
 
 	result, err := dbConn.SQL.ExecContext(ctx, stmt)
 	if err != nil {
@@ -212,14 +233,14 @@ func EditProductCategory(productCategoryEditInfo entity.ProductCategoryEditReque
 	if rowsAffected == 0 {
 		return entity.ProductCategory{}, errors.New("product category could not be found")
 	}
-	productCategory, err := FindProductCategory(productCategoryEditInfo.ID)
+	productCategory, err := driver.FindProductCategory(productCategoryEditInfo.ID)
 	if err != nil {
 		return entity.ProductCategory{}, err
 	}
 	return productCategory, nil
 }
 
-func GetEditProductCategoryStatementString(productEditInfo entity.ProductCategoryEditRequest) string {
+func (driver *productCategoryDriver) GetEditProductCategoryStatementString(productEditInfo entity.ProductCategoryEditRequest) string {
 	stmt := `UPDATE product_categories SET `
 	if productEditInfo.Name != "" {
 		stmt = stmt + `name = '` + productEditInfo.Name + `', `
@@ -236,7 +257,7 @@ func GetEditProductCategoryStatementString(productEditInfo entity.ProductCategor
 	return stmt
 }
 
-func ActivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error {
+func (driver *productCategoryDriver) ActivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -254,7 +275,7 @@ func ActivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoR
 	return nil
 }
 
-func DeactivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error {
+func (driver *productCategoryDriver) DeactivateProductCategory(productCategoryEditInfo entity.ProductCategoryInfoRequest) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
