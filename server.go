@@ -1265,6 +1265,19 @@ func main() {
 			ctx.JSON(200, gin.H{"other_reason_complaints": otherReasonComplaints})
 		})
 
+		apiComplaintsRoutes.GET("/user_complaints/:user_id", func(ctx *gin.Context) {
+			id := ctx.Param("user_id")
+			idValue, err := strconv.Atoi(id)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			userComplaints, err := complaintController.FindUserComplaints(idValue)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			ctx.JSON(200, gin.H{"user_complaints": userComplaints})
+		})
+
 		apiComplaintsRoutes.POST("/add", func(ctx *gin.Context) {
 			err := complaintController.AddComplaint(ctx)
 			if err != nil {

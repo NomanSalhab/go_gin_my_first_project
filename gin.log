@@ -105,24 +105,16 @@
 [GIN-debug] GET    /api/complaints/about_the_app --> main.main.func101 (5 handlers)
 [GIN-debug] GET    /api/complaints/improvement_suggestion --> main.main.func102 (5 handlers)
 [GIN-debug] GET    /api/complaints/other_reason --> main.main.func103 (5 handlers)
-[GIN-debug] POST   /api/complaints/add       --> main.main.func104 (5 handlers)
-[GIN-debug] DELETE /api/complaints/delete    --> main.main.func105 (5 handlers)
+[GIN-debug] GET    /api/complaints/user_complaints/:user_id --> main.main.func104 (5 handlers)
+[GIN-debug] POST   /api/complaints/add       --> main.main.func105 (5 handlers)
+[GIN-debug] DELETE /api/complaints/delete    --> main.main.func106 (5 handlers)
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [15 Oct 23 20:56 +03] GET /api/areas/all 200 150.7616ms 
-::1 - [15 Oct 23 20:56 +03] GET /api/areas/active 200 127.8971ms 
-::1 - [15 Oct 23 20:57 +03] GET /api/areas/not_active 200 122.2831ms 
-::1 - [15 Oct 23 20:57 +03] POST /api/areas/add 200 199.4185ms 
-::1 - [15 Oct 23 20:57 +03] GET /api/areas/all 200 134.4519ms 
-::1 - [15 Oct 23 20:57 +03] PUT /api/areas/edit 400 121.1768ms 
-::1 - [15 Oct 23 20:57 +03] PUT /api/areas/edit 200 119.1892ms 
-::1 - [15 Oct 23 20:57 +03] GET /api/areas/all 200 111.914ms 
-::1 - [15 Oct 23 20:57 +03] GET /api/product_categories/all 200 129.6528ms 
-::1 - [15 Oct 23 20:57 +03] GET /api/product_categories/active 200 113.0045ms 
-::1 - [15 Oct 23 20:58 +03] POST /api/product_categories/add 200 133.9555ms 
-::1 - [15 Oct 23 20:58 +03] GET /api/product_categories/active 200 122.7392ms 
-::1 - [15 Oct 23 20:58 +03] GET /api/store_categories/all 200 118.5886ms 
-::1 - [15 Oct 23 20:58 +03] POST /api/store_categories/add 200 122.7596ms 
-::1 - [15 Oct 23 20:59 +03] GET /api/store_categories/all 200 131.9997ms 
-::1 - [15 Oct 23 20:59 +03] GET /api/complaints/all 200 126.2107ms 
+::1 - [15 Oct 23 21:12 +03] GET /api/complaints/user_complaints/1 200 118.7751ms 
+::1 - [15 Oct 23 21:13 +03] GET /api/complaints/user_complaints/1 200 126.536ms 
+::1 - [15 Oct 23 21:13 +03] GET /api/complaints/user_complaints/2 200 109.1275ms 
+::1 - [15 Oct 23 21:13 +03] GET /api/complaints/user_complaints/2 200 120.3854ms 
+::1 - [15 Oct 23 21:13 +03] GET /api/complaints/user_complaints/1 200 117.0639ms 
+::1 - [15 Oct 23 21:13 +03] GET /api/complaints/user_complaints/2 200 110.2761ms 
+::1 - [15 Oct 23 21:13 +03] GET /api/complaints/user_complaints/1 200 244.6646ms 

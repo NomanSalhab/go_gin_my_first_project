@@ -14,6 +14,7 @@ type ComplaintService interface {
 	FindAboutTheAppComplaints() ([]entity.Complaint, error)
 	FindImprovementSuggestionComplaints() ([]entity.Complaint, error)
 	FindOtherReasonComplaints() ([]entity.Complaint, error)
+	FindUserComplaints(wantedId int) ([]entity.Complaint, error)
 
 	AddComplaint(complaint entity.Complaint) error
 	DeleteComplaint(complaint entity.Complaint) error
@@ -88,6 +89,14 @@ func (service *complaintService) FindOtherReasonComplaints() ([]entity.Complaint
 		return make([]entity.Complaint, 0), err
 	}
 	return allOtherReasonComplaints, nil
+}
+
+func (service *complaintService) FindUserComplaints(wantedId int) ([]entity.Complaint, error) {
+	allUserComplaints, err := service.driver.FindUserComplaints(wantedId)
+	if err != nil {
+		return make([]entity.Complaint, 0), err
+	}
+	return allUserComplaints, nil
 }
 
 func (service *complaintService) DeleteComplaint(complaint entity.Complaint) error {

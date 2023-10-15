@@ -14,6 +14,7 @@ type ComplaintDriver interface {
 	FindAboutTheAppComplaints() ([]entity.Complaint, error)
 	FindImprovementSuggestionComplaints() ([]entity.Complaint, error)
 	FindOtherReasonComplaints() ([]entity.Complaint, error)
+	FindUserComplaints(wantedId int) ([]entity.Complaint, error)
 
 	AddComplaint(complaint entity.Complaint) error
 	AddAboutDelivery(complaint entity.Complaint) error
@@ -201,6 +202,47 @@ func (driver *complaintDriver) FindOtherReasonComplaints() ([]entity.Complaint, 
 		id, user_id, text, date, about_delivery, 
 		about_the_app, improvement_suggestion, other_reason 
 	from complaints where other_reason = true`)
+	if err != nil {
+		return make([]entity.Complaint, 0), err
+	}
+	defer rows.Close()
+
+	var id, userId int
+	var text string
+	var date time.Time
+	var aboutDelivery, aboutTheApp, improvementSuggestion, otherReason bool
+
+	for rows.Next() {
+		err := rows.Scan(&id, &userId, &text, &date, &aboutDelivery, &aboutTheApp, &improvementSuggestion, &otherReason)
+		if err != nil {
+			return make([]entity.Complaint, 0), err
+		}
+		complaints = append(complaints, entity.Complaint{
+			ID:                    id,
+			UserID:                userId,
+			Text:                  text,
+			Date:                  date,
+			AboutDelivery:         aboutDelivery,
+			AboutTheApp:           aboutTheApp,
+			ImprovementSuggestion: improvementSuggestion,
+			OtherReason:           otherReason,
+		})
+		if err = rows.Err(); err != nil {
+			return make([]entity.Complaint, 0), err
+		}
+	}
+
+	// driver.cacheDetails = complaints
+	return complaints, nil
+}
+
+func (driver *complaintDriver) FindUserComplaints(wantedId int) ([]entity.Complaint, error) {
+	complaints := make([]entity.Complaint, 0)
+	rows, err := dbConn.SQL.Query(`
+	select 
+		id, user_id, text, date, about_delivery, 
+		about_the_app, improvement_suggestion, other_reason 
+	from complaints where user_id = $1`, wantedId)
 	if err != nil {
 		return make([]entity.Complaint, 0), err
 	}

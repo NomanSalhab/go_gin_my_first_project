@@ -12,6 +12,7 @@ type ComplaintController interface {
 	FindAboutTheAppComplaints() ([]entity.Complaint, error)
 	FindImprovementSuggestionComplaints() ([]entity.Complaint, error)
 	FindOtherReasonComplaints() ([]entity.Complaint, error)
+	FindUserComplaints(wantedId int) ([]entity.Complaint, error)
 
 	AddComplaint(ctx *gin.Context) error
 	DeleteComplaint(ctx *gin.Context) error
@@ -45,6 +46,10 @@ func (c *complaintController) FindImprovementSuggestionComplaints() ([]entity.Co
 
 func (c *complaintController) FindOtherReasonComplaints() ([]entity.Complaint, error) {
 	return c.service.FindOtherReasonComplaints()
+}
+
+func (c *complaintController) FindUserComplaints(wantedId int) ([]entity.Complaint, error) {
+	return c.service.FindUserComplaints(wantedId)
 }
 
 func (c *complaintController) AddComplaint(ctx *gin.Context) error {
