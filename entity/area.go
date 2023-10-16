@@ -16,6 +16,14 @@ type AreaEditRequest struct {
 	Active bool    `json:"active"`
 }
 
+type AreaEditUserRequest struct {
+	ID     int     `json:"id"`
+	Name   string  `json:"name"`
+	Lat    float32 `json:"lat"`
+	Long   float32 `json:"long"`
+	Active bool    `json:"active"`
+}
+
 type AreaActivateRequest struct {
 	ID int `json:"id" binding:"required"`
 }

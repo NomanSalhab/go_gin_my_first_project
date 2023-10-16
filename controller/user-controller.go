@@ -25,6 +25,10 @@ type UserController interface {
 	UserCircles(ctx *gin.Context, sentId int) (entity.UserCirclesResponse, error)
 	ActivateUser(ctx *gin.Context) error
 	DeactivateUser(ctx *gin.Context) error
+
+	SpecializeUser(ctx *gin.Context) error
+	NormalizeUser(ctx *gin.Context) error
+	ChangeUserRole(ctx *gin.Context) error
 }
 
 type userController struct {
@@ -162,6 +166,57 @@ func (c *userController) DeactivateUser(ctx *gin.Context) error {
 		return err
 	}
 	err = c.service.DeactivateUser(userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *userController) SpecializeUser(ctx *gin.Context) error {
+	var userId entity.UserInfoRequest
+	err := ctx.ShouldBindJSON(&userId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(userId)
+	if err != nil {
+		return err
+	}
+	err = c.service.SpecializeUser(userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *userController) NormalizeUser(ctx *gin.Context) error {
+	var userId entity.UserInfoRequest
+	err := ctx.ShouldBindJSON(&userId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(userId)
+	if err != nil {
+		return err
+	}
+	err = c.service.NormalizeUser(userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *userController) ChangeUserRole(ctx *gin.Context) error {
+	var userId entity.UserChangeRoleRequest
+	err := ctx.ShouldBindJSON(&userId)
+	if err != nil {
+		return err
+	}
+	err = validate.Struct(userId)
+	if err != nil {
+		return err
+	}
+	err = c.service.ChangeUserRole(userId)
 	if err != nil {
 		return err
 	}

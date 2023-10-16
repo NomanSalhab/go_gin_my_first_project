@@ -34,6 +34,10 @@ type UserDriver interface {
 
 	EditUserBalanceAndCircles(userId int, deliveryCost int, productsCost int) error
 	EditDeliveryWorkerBalanceAndCircles(userId int, deliveryCost int) error
+
+	SpecializeUser(userInfo entity.UserInfoRequest) error
+	NormalizeUser(userInfo entity.UserInfoRequest) error
+	ChangeUserRole(userInfo entity.UserChangeRoleRequest) error
 }
 
 type userDriver struct {
@@ -46,20 +50,25 @@ func NewUserDriver() UserDriver {
 
 func (driver *userDriver) FindAllUsers() ([]entity.User, error) {
 	users := make([]entity.User, 0)
-	rows, err := dbConn.SQL.Query("select id, name, phone, balance, active, circles, role, user_discount from users")
+	rows, err := dbConn.SQL.Query("select id, name, phone, balance, active, circles, role, user_discount, area_id, special_user from users")
 	if err != nil {
 		return make([]entity.User, 0), err
 	}
 	defer rows.Close()
 
-	var id, balance, circles, role int
+	var id, balance, circles, role, areaId int
 	// var deliveryTime time.Time
 	var name, phone string
-	var active bool
+	var active, specialUser bool
 	var userDiscount float32
 
 	for rows.Next() {
-		err := rows.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount)
+		err := rows.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount, &areaId, &specialUser)
+		if err != nil {
+			// log.Println(err)
+			return make([]entity.User, 0), err
+		}
+		area, err := ad.FindArea(areaId)
 		if err != nil {
 			// log.Println(err)
 			return make([]entity.User, 0), err
@@ -74,6 +83,8 @@ func (driver *userDriver) FindAllUsers() ([]entity.User, error) {
 			Circles:      circles,
 			Role:         role,
 			UserDiscount: userDiscount,
+			Area:         area,
+			SpecialUser:  specialUser,
 		})
 		// fmt.Println("Record is:", userId, deliveryTime, products)
 		if err = rows.Err(); err != nil {
@@ -88,20 +99,25 @@ func (driver *userDriver) FindAllUsers() ([]entity.User, error) {
 
 func (driver *userDriver) FindActiveUsers() ([]entity.User, error) {
 	users := make([]entity.User, 0)
-	rows, err := dbConn.SQL.Query("select id, name, phone, balance, active, circles, role, user_discount from users where active = true")
+	rows, err := dbConn.SQL.Query("select id, name, phone, balance, active, circles, role, user_discount, area_id, special_user from users where active = true")
 	if err != nil {
 		return make([]entity.User, 0), err
 	}
 	defer rows.Close()
 
-	var id, balance, circles, role int
+	var id, balance, circles, role, areaId int
 	// var deliveryTime time.Time
 	var name, phone string
-	var active bool
+	var active, specialUser bool
 	var userDiscount float32
 
 	for rows.Next() {
-		err := rows.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount)
+		err := rows.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount, &areaId, &specialUser)
+		if err != nil {
+			// log.Println(err)
+			return make([]entity.User, 0), err
+		}
+		area, err := ad.FindArea(areaId)
 		if err != nil {
 			// log.Println(err)
 			return make([]entity.User, 0), err
@@ -116,6 +132,8 @@ func (driver *userDriver) FindActiveUsers() ([]entity.User, error) {
 			Circles:      circles,
 			Role:         role,
 			UserDiscount: userDiscount,
+			Area:         area,
+			SpecialUser:  specialUser,
 		})
 		// fmt.Println("Record is:", userId, deliveryTime, products)
 		if err = rows.Err(); err != nil {
@@ -130,20 +148,25 @@ func (driver *userDriver) FindActiveUsers() ([]entity.User, error) {
 
 func (driver *userDriver) FindNotActiveUsers() ([]entity.User, error) {
 	users := make([]entity.User, 0)
-	rows, err := dbConn.SQL.Query("select id, name, phone, balance, active, circles, role, user_discount from users where active = false")
+	rows, err := dbConn.SQL.Query("select id, name, phone, balance, active, circles, role, user_discount, area_id, special_user from users where active = false")
 	if err != nil {
 		return make([]entity.User, 0), err
 	}
 	defer rows.Close()
 
-	var id, balance, circles, role int
+	var id, balance, circles, role, areaId int
 	// var deliveryTime time.Time
 	var name, phone string
-	var active bool
+	var active, specialUser bool
 	var userDiscount float32
 
 	for rows.Next() {
-		err := rows.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount)
+		err := rows.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount, &areaId, &specialUser)
+		if err != nil {
+			// log.Println(err)
+			return make([]entity.User, 0), err
+		}
+		area, err := ad.FindArea(areaId)
 		if err != nil {
 			// log.Println(err)
 			return make([]entity.User, 0), err
@@ -158,6 +181,8 @@ func (driver *userDriver) FindNotActiveUsers() ([]entity.User, error) {
 			Circles:      circles,
 			Role:         role,
 			UserDiscount: userDiscount,
+			Area:         area,
+			SpecialUser:  specialUser,
 		})
 		// fmt.Println("Record is:", userId, deliveryTime, products)
 		if err = rows.Err(); err != nil {
@@ -172,13 +197,16 @@ func (driver *userDriver) FindNotActiveUsers() ([]entity.User, error) {
 
 func (driver *userDriver) FindUser(wantedId int) (entity.User, error) {
 
-	query := `select id, name, phone, balance, active, circles, role, user_discount from users where id = $1`
-	var id, balance, circles, role int
+	query := `
+	select 
+		id, name, phone, balance, active, circles, role, user_discount, area_id, special_user 
+	from users where id = $1`
+	var id, balance, circles, role, areaId int
 	var name, phone string
-	var active bool
+	var active, specialUser bool
 	var userDiscount float32
 	row := dbConn.SQL.QueryRow(query, wantedId)
-	err := row.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount)
+	err := row.Scan(&id, &name, &phone, &balance, &active, &circles, &role, &userDiscount, &areaId, &specialUser)
 	// fmt.Println("User Data:", id, name, phone)
 	if err != nil {
 		return entity.User{
@@ -192,6 +220,11 @@ func (driver *userDriver) FindUser(wantedId int) (entity.User, error) {
 			Role:     0,
 		}, err
 	}
+	area, err := ad.FindArea(areaId)
+	if err != nil {
+		// log.Println(err)
+		return entity.User{}, err
+	}
 	user := entity.User{
 		ID:           id,
 		Name:         name,
@@ -202,34 +235,37 @@ func (driver *userDriver) FindUser(wantedId int) (entity.User, error) {
 		Circles:      circles,
 		Role:         role,
 		UserDiscount: userDiscount,
+		Area:         area,
+		SpecialUser:  specialUser,
 	}
 	return user, nil
 }
 
 func (driver *userDriver) FindUserAddresses(wantedId int) ([]entity.Address, error) {
 	var addresses []entity.Address
-	rows, err := dbConn.SQL.Query("select id, name, latitude, longitude, user_id from addresses where user_id = $1", wantedId)
+	rows, err := dbConn.SQL.Query("select id, name, description, latitude, longitude, user_id from addresses where user_id = $1", wantedId)
 	if err != nil {
 		return make([]entity.Address, 0), err
 	}
 	defer rows.Close()
 
 	var id, userId int
-	var name string
+	var name, description string
 	var latitude, longitude float32
 
 	for rows.Next() {
-		err := rows.Scan(&id, &name, &latitude, &longitude, &userId)
+		err := rows.Scan(&id, &name, &description, &latitude, &longitude, &userId)
 		if err != nil {
 			// log.Println(err)
 			return make([]entity.Address, 0), err
 		}
 		addresses = append(addresses, entity.Address{
-			ID:        id,
-			Name:      name,
-			Latitude:  latitude,
-			Longitude: longitude,
-			UserId:    userId,
+			ID:           id,
+			Name:         name,
+			Descripition: description,
+			Latitude:     latitude,
+			Longitude:    longitude,
+			UserId:       userId,
 		})
 		// fmt.Println("Record is:", userId, deliveryTime, products)
 		if err = rows.Err(); err != nil {
@@ -374,10 +410,10 @@ func (driver *userDriver) UserAddAddress(address entity.AddAddressRequest) error
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
-	stmt := `INSERT INTO addresses(user_id, name, latitude, longitude)
+	stmt := `INSERT INTO addresses(user_id, name, description, latitude, longitude)
 	VALUES ($1, $2, $3, $4) returning *`
 
-	result, err := dbConn.SQL.ExecContext(ctx, stmt, address.UserId, address.Name, address.Latitude, address.Longitude)
+	result, err := dbConn.SQL.ExecContext(ctx, stmt, address.UserId, address.Name, address.Descripition, address.Latitude, address.Longitude)
 	if err != nil {
 		return err
 	}
@@ -410,13 +446,13 @@ func (driver *userDriver) UserDeleteAddress(wantedId int) error {
 
 func (driver *userDriver) LoginUser(userLoginInfo entity.UserLoginRequest) (entity.User, error) {
 	// user, err := FindUser(userLoginInfo)
-	query := `select id, name, phone, password, active, role, user_discount from users where phone = $1`
-	var id, role int
+	query := `select id, name, phone, password, active, role, user_discount, area_id from users where phone = $1`
+	var id, role, areaId int
 	var name, phone, password string
 	var active bool
 	var userDiscount float32
 	row := dbConn.SQL.QueryRow(query, userLoginInfo.Phone)
-	err := row.Scan(&id, &name, &phone, &password, &active, &role, &userDiscount)
+	err := row.Scan(&id, &name, &phone, &password, &active, &role, &userDiscount, &areaId)
 	if id == 0 {
 		return entity.User{
 			ID:       0,
@@ -453,6 +489,11 @@ func (driver *userDriver) LoginUser(userLoginInfo entity.UserLoginRequest) (enti
 			Role:     0,
 		}, err
 	}
+	area, err := ad.FindArea(areaId)
+	if err != nil {
+		// log.Println(err)
+		return entity.User{}, err
+	}
 	user := entity.User{
 		ID:           id,
 		Name:         name,
@@ -461,6 +502,7 @@ func (driver *userDriver) LoginUser(userLoginInfo entity.UserLoginRequest) (enti
 		Active:       active,
 		Role:         role,
 		UserDiscount: userDiscount,
+		Area:         area,
 	}
 	return user, nil
 }
@@ -493,14 +535,17 @@ func (driver *userDriver) GetEditUserStatementString(userEditInfo entity.UserEdi
 	if userEditInfo.Name != "" {
 		stmt = stmt + `name = '` + userEditInfo.Name + `', `
 	}
-	if userEditInfo.Role != 0 {
-		stmt = stmt + `role = ` + fmt.Sprint(userEditInfo.Role) + `, `
-	}
+	// if userEditInfo.Role != 0 {
+	// 	stmt = stmt + `role = ` + fmt.Sprint(userEditInfo.Role) + `, `
+	// }
 	if userEditInfo.Password != "" {
 		stmt = stmt + `password = '` + userEditInfo.Password + `', `
 	}
 	if userEditInfo.Balance != 0 {
 		stmt = stmt + `balance = ` + fmt.Sprint(userEditInfo.Balance) + `, `
+	}
+	if userEditInfo.Area.ID != 0 {
+		stmt = stmt + `area_id = ` + fmt.Sprint(userEditInfo.Area.ID) + `, `
 	}
 	if userEditInfo.Active {
 		stmt = stmt + `active = true `
@@ -570,6 +615,60 @@ func (driver *userDriver) DeactivateUser(userInfo entity.UserInfoRequest) error 
 	return nil
 }
 
+func (driver *userDriver) SpecializeUser(userInfo entity.UserInfoRequest) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE users SET special_user = true WHERE id = $1 RETURNING *`
+
+	result, err := dbConn.SQL.ExecContext(ctx, stmt, userInfo.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("user could not be found")
+	}
+	return nil
+}
+
+func (driver *userDriver) NormalizeUser(userInfo entity.UserInfoRequest) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE users SET special_user = false WHERE id = $1 RETURNING *`
+
+	result, err := dbConn.SQL.ExecContext(ctx, stmt, userInfo.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("user could not be found")
+	}
+	return nil
+}
+
+func (driver *userDriver) ChangeUserRole(userInfo entity.UserChangeRoleRequest) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	stmt := `UPDATE users SET role = $1 WHERE id = $2 RETURNING *`
+
+	result, err := dbConn.SQL.ExecContext(ctx, stmt, userInfo.Role, userInfo.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("user could not be found")
+	}
+	return nil
+}
+
 func (driver *userDriver) EditUserBalanceAndCircles(userId int, deliveryCost int, productsCost int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
@@ -586,21 +685,23 @@ func (driver *userDriver) EditUserBalanceAndCircles(userId int, deliveryCost int
 	if rowsAffected == 0 {
 		return errors.New("user could not be found")
 	}
-	_, err = driver.FindUser(userId)
+	user, err := driver.FindUser(userId)
 	if err != nil {
 		return err
 	}
-	rateAndCircles, _ := driver.FindUserRateAndCircles(userId)
-	fmt.Println("User ID:", userId)
-	fmt.Println("Rate and Circles:", rateAndCircles)
-	if rateAndCircles.Rate == 1 {
-		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.75})
-	} else if rateAndCircles.Rate == 2 {
-		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.5})
-	} else if rateAndCircles.Rate == 3 {
-		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.25})
-	} else {
-		driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.0})
+	if !user.SpecialUser {
+		rateAndCircles, _ := driver.FindUserRateAndCircles(userId)
+		// fmt.Println("User ID:", userId)
+		// fmt.Println("Rate and Circles:", rateAndCircles)
+		if rateAndCircles.Rate == 1 {
+			driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.75})
+		} else if rateAndCircles.Rate == 2 {
+			driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.5})
+		} else if rateAndCircles.Rate == 3 {
+			driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.25})
+		} else {
+			driver.EditUserDiscount(entity.User{ID: userId, UserDiscount: 0.0})
+		}
 	}
 	return nil
 }

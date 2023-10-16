@@ -50,6 +50,7 @@ var (
 	sd  StoreDriver         = NewStoreDriver()
 	cd  CouponDriver        = NewCouponDriver()
 	opd OrderProductsDriver = NewOrderProductsDriver()
+	ad  AreaDriver          = NewAreaDriver()
 )
 
 func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entity.Order, entity.PaginationInfo, error) {
@@ -89,14 +90,10 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 				return make([]entity.Order, 0), paginationInfo, err
 			}
 
-			// fmt.Println("Order Product IDs:", orderProducts)
-			//? To Change Wanting Order Products Uncomment Below
-			finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
-			// fmt.Println("Final Order Products:", finalOrderProducts)
-			//? To Change Wanting Order Products Uncomment Below
-			if err != nil {
-				return make([]entity.Order, 0), paginationInfo, err
-			}
+			//? finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+			//? if err != nil {
+			//? 	return make([]entity.Order, 0), paginationInfo, err
+			//? }
 			finalAddress, err := driver.GetAddressById(address)
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
@@ -126,7 +123,7 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 				Notes:            notes,
 				ProductsCost:     productsCost,
 				Coupon:           coupon,
-				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
+				Products:         make([]entity.OrderProduct, 0), /*finalOrderProducts*/
 			}
 			orders = append(orders, order)
 			if err = rows.Err(); err != nil {
@@ -145,27 +142,29 @@ func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entit
 
 func (driver *orderDriver) GetAddressById(wantedId int) (entity.OrderAddress, error) {
 	// fmt.Println("Address ID:", wantedId)
-	query := `select id, name, user_id, latitude, longitude from addresses where id = $1`
+	query := `select id, name, description, user_id, latitude, longitude from addresses where id = $1`
 	var id, userId int
-	var name string
+	var name, description string
 	var latitude, longitude float32
 	row := dbConn.SQL.QueryRow(query, wantedId)
-	err := row.Scan(&id, &name, &userId, &latitude, &longitude)
+	err := row.Scan(&id, &name, &description, &userId, &latitude, &longitude)
 	if err != nil {
 		return entity.OrderAddress{
-			ID:        0,
-			Name:      "",
-			UserId:    0,
-			Latitude:  float32(0.0),
-			Longitude: float32(0.0),
+			ID:           0,
+			Name:         "",
+			Descripition: "",
+			UserId:       0,
+			Latitude:     float32(0.0),
+			Longitude:    float32(0.0),
 		}, err
 	}
 	address := entity.OrderAddress{
-		ID:        id,
-		Name:      name,
-		UserId:    userId,
-		Latitude:  latitude,
-		Longitude: longitude,
+		ID:           id,
+		Name:         name,
+		Descripition: description,
+		UserId:       userId,
+		Latitude:     latitude,
+		Longitude:    longitude,
 	}
 	return address, nil
 }
@@ -180,22 +179,23 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 	if err != nil {
 		return err
 	}
-	storesDeliveryCost := GetOrderDeliveryCost(order)
+	if user.Active {
+		storesDeliveryCost := GetOrderDeliveryCost(order)
 
-	userDeliveryCost = storesDeliveryCost - int(user.UserDiscount*float32(storesDeliveryCost))
+		userDeliveryCost = storesDeliveryCost - int(user.UserDiscount*float32(storesDeliveryCost))
 
-	_, productsCost := opd.GetAddOrderProductsStatement(order.Products)
-	coupon, err := cd.GetCouponInfo(order.Coupon.ID)
-	if err != nil {
-		return err
-	}
-	if !coupon.FreeDelivery {
-		productsCost = opd.GetAddOrderProductsProductsPriceAfterCoupon(productsCost, coupon)
-	} else {
-		userDeliveryCost = 0
-	}
+		_, productsCost := opd.GetAddOrderProductsStatement(order.Products)
+		coupon, err := cd.GetCouponInfo(order.Coupon.ID)
+		if err != nil {
+			return err
+		}
+		if !coupon.FreeDelivery {
+			productsCost = opd.GetAddOrderProductsProductsPriceAfterCoupon(productsCost, coupon)
+		} else {
+			userDeliveryCost = 0
+		}
 
-	stmt := `INSERT INTO orders(
+		stmt := `INSERT INTO orders(
 		user_id, order_time, delivery_time,
 		products_cost, address,
 		delivery_cost, notes, delivery_worker_id,
@@ -208,31 +208,34 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 		$10, $11, $12
 	) returning *` // order_products, , $12
 
-	result, err := dbConn.SQL.ExecContext(ctx, stmt,
-		order.UserID, order.OrderTime, order.DeliveryTime,
-		productsCost, order.Address.ID, // op,
-		userDeliveryCost, order.Notes, order.DeliveryWorkerId,
-		false, false, false, order.Coupon.ID)
-	if err != nil {
-		return err
-	}
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return errors.New("order could not be added")
-	}
+		result, err := dbConn.SQL.ExecContext(ctx, stmt,
+			order.UserID, order.OrderTime, order.DeliveryTime,
+			productsCost, order.Address.ID, // op,
+			userDeliveryCost, order.Notes, order.DeliveryWorkerId,
+			false, false, false, order.Coupon.ID)
+		if err != nil {
+			return err
+		}
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			return errors.New("order could not be added")
+		}
 
-	lastOrderID, _ := GetLastOrderId()
-	for i := 0; i < len(order.Products); i++ {
-		order.Products[i].OrderId = lastOrderID
-	}
+		lastOrderID, _ := GetLastOrderId()
+		for i := 0; i < len(order.Products); i++ {
+			order.Products[i].OrderId = lastOrderID
+		}
 
-	_, _, err = opd.AddOrderProducts(order.Products)
-	if err != nil {
-		return err
-	}
+		_, _, err = opd.AddOrderProducts(order.Products)
+		if err != nil {
+			return err
+		}
 
-	driver.cacheorders = make([]entity.Order, 0)
-	return nil
+		driver.cacheorders = make([]entity.Order, 0)
+		return nil
+	} else {
+		return errors.New("user is not active")
+	}
 }
 
 func (driver *orderDriver) FindOrder(orderId int) (entity.Order, error) {

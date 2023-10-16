@@ -405,6 +405,33 @@ func main() {
 				ctx.JSON(http.StatusOK, gin.H{"message": "user is deactivated successfully"})
 			}
 		})
+
+		apiUsersRoutes.PUT("/specialize", func(ctx *gin.Context) {
+			err := UserController.SpecializeUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user is specialized successfully"})
+			}
+		})
+
+		apiUsersRoutes.PUT("/normalize", func(ctx *gin.Context) {
+			err := UserController.NormalizeUser(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user is normalized successfully"})
+			}
+		})
+
+		apiUsersRoutes.PUT("/change_role", func(ctx *gin.Context) {
+			err := UserController.ChangeUserRole(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "user role is changed successfully"})
+			}
+		})
 	}
 
 	apiStoreCategoriesRoutes := server.Group("/api/store_categories")

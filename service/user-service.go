@@ -23,11 +23,12 @@ type UserService interface {
 	ActivateUser(userInfo entity.UserInfoRequest) error
 	DeactivateUser(userInfo entity.UserInfoRequest) error
 
-	AddMockUsers(users []entity.User)
+	SpecializeUser(userInfo entity.UserInfoRequest) error
+	NormalizeUser(userInfo entity.UserInfoRequest) error
+	ChangeUserRole(userInfo entity.UserChangeRoleRequest) error
 }
 
 type userService struct {
-	users  []entity.User
 	driver driver.UserDriver
 	// addresses []entity.Address
 }
@@ -119,7 +120,10 @@ func (service *userService) FindUser(id entity.UserInfoRequest) (entity.User, er
 	// } else {
 	// 	return user, errors.New("user id cannot be zero")
 	// }
-	user, _ := service.driver.FindUser(id.ID)
+	user, err := service.driver.FindUser(id.ID)
+	if err != nil {
+		return entity.User{}, err
+	}
 	if user.Name == "" {
 		return user, errors.New("the user couldn't be found")
 	}
@@ -251,18 +255,10 @@ func (service *userService) LoginUser(userAuth entity.UserLoginRequest) (entity.
 	if err != nil {
 		return user, err
 	}
+	if !user.Active {
+		return user, errors.New("user is not activated")
+	}
 	return user, nil
-	// users := service.FindAll()
-	// for i := 0; i < len(users) && len(users) != 0; i++ {
-	// 	if users[i].Phone == userAuth.Phone {
-	// 		if users[i].Password == userAuth.Password {
-	// 			return users[i], nil
-	// 		} else {
-	// 			return entity.User{}, errors.New("password is wrong")
-	// 		}
-	// 	}
-	// }
-	// return entity.User{}, errors.New("phone number is wrong")
 }
 
 func (service *userService) EditUser(userEditInfo entity.UserEditRequest) error {
@@ -271,32 +267,6 @@ func (service *userService) EditUser(userEditInfo entity.UserEditRequest) error 
 		return err
 	}
 	return nil
-	// users := service.FindAll()
-	// if user.ID == 0 {
-	// 	return errors.New("user id cannot be zero")
-	// }
-	// for i := 0; i < len(users) && len(users) != 0; i++ {
-	// 	if user.ID != 0 {
-	// 		if users[i].ID == user.ID {
-	// 			if user.Name != "" {
-	// 				users[i].Name = user.Name
-	// 			}
-	// 			if user.Balance != 0 {
-	// 				users[i].Balance = user.Balance
-	// 			}
-	// 			// if user.Role != 0 {
-	// 			users[i].Role = user.Role
-	// 			// }
-
-	// 			if user.Password != "" {
-	// 				users[i].Password = user.Password
-	// 			}
-	// 			users[i].Active = user.Active
-	// 			return nil
-	// 		}
-	// 	}
-	// }
-	// return errors.New("user could not be found")
 }
 
 func (service *userService) ActivateUser(userInfo entity.UserInfoRequest) error {
@@ -343,6 +313,34 @@ func (service *userService) DeactivateUser(userInfo entity.UserInfoRequest) erro
 	// return errors.New("the store category couldn't be found")
 }
 
+func (service *userService) SpecializeUser(userInfo entity.UserInfoRequest) error {
+	err := service.driver.SpecializeUser(userInfo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (service *userService) NormalizeUser(userInfo entity.UserInfoRequest) error {
+	err := service.driver.NormalizeUser(userInfo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (service *userService) ChangeUserRole(userInfo entity.UserChangeRoleRequest) error {
+	if userInfo.Role == 0 || userInfo.Role == 1 || userInfo.Role == 2 {
+		err := service.driver.ChangeUserRole(userInfo)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		return errors.New("specified role is invalid")
+	}
+}
+
 func (service *userService) DeleteUser(user entity.UserInfoRequest) error {
 	err := service.driver.DeleteUser(user.ID)
 	if err != nil {
@@ -365,8 +363,4 @@ func (service *userService) DeleteUser(user entity.UserInfoRequest) error {
 	// }
 	// service.users = tempUsers
 	// return nil
-}
-
-func (service *userService) AddMockUsers(users []entity.User) {
-	service.users = append(service.users, users...)
 }

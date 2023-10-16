@@ -13,6 +13,7 @@ type AreaDriver interface {
 	FindAllAreas() ([]entity.Area, error)
 	FindActiveAreas() ([]entity.Area, error)
 	FindNotActiveAreas() ([]entity.Area, error)
+	FindArea(wantedId int) (entity.AreaEditRequest, error)
 
 	AddArea(area entity.Area) error
 	DeleteArea(wantedId int) error
@@ -166,6 +167,35 @@ func (driver *areaDriver) DeleteArea(wantedId int) error {
 	}
 
 	return nil
+}
+
+func (driver *areaDriver) FindArea(wantedId int) (entity.AreaEditRequest, error) {
+
+	query := `select id, name, lat, long, active from areas where id=$1`
+	var id int
+	var name string
+	var active bool
+	var lat, long float32
+	row := dbConn.SQL.QueryRow(query, wantedId)
+	err := row.Scan(&id, &name, &lat, &long, &active)
+	if err != nil {
+		return entity.AreaEditRequest{
+			ID:     0,
+			Name:   "",
+			Lat:    0.0,
+			Long:   0.0,
+			Active: false,
+		}, err
+	}
+	area := entity.AreaEditRequest{
+		ID:     id,
+		Name:   name,
+		Lat:    lat,
+		Long:   long,
+		Active: active,
+	}
+
+	return area, nil
 }
 
 func (driver *areaDriver) EditArea(areaEditInfo entity.AreaEditRequest) (entity.Area, error) {
