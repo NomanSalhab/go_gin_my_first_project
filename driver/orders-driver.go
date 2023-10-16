@@ -345,14 +345,10 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 				return make([]entity.Order, 0), paginationInfo, err
 			}
 
-			// fmt.Println("Order Product IDs:", orderProducts)
-			//? To Change Wanting Order Products Uncomment Below
-			finalOrderProducts, err := opd.FindOrderProductsByOrderId(id) // pd.GetIntSliceFromString(orderProducts), false
-			// fmt.Println("Final Order Products:", finalOrderProducts)
-			//? To Change Wanting Order Products Uncomment Below
-			if err != nil {
-				return make([]entity.Order, 0), paginationInfo, err
-			}
+			// finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+			// if err != nil {
+			// 	return make([]entity.Order, 0), paginationInfo, err
+			// }
 			finalAddress, err := driver.GetAddressById(address)
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
@@ -382,7 +378,7 @@ func (driver *orderDriver) FindFinishedOrders(pageLimit int, pageOffset int) ([]
 				Notes:            notes,
 				ProductsCost:     productsCost,
 				Coupon:           coupon,
-				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
+				Products:         make([]entity.OrderProduct, 0), /*finalOrderProducts*/
 			}
 			orders = append(orders, order)
 			if err = rows.Err(); err != nil {
@@ -437,14 +433,10 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 				return make([]entity.Order, 0), paginationInfo, err
 			}
 
-			// fmt.Println("Order Product IDs:", orderProducts)
-			//? To Change Wanting Order Products Uncomment Below
-			finalOrderProducts, err := opd.FindOrderProductsByOrderId(id) // pd.GetIntSliceFromString(orderProducts), false
-			// fmt.Println("Final Order Products:", finalOrderProducts)
-			//? To Change Wanting Order Products Uncomment Below
-			if err != nil {
-				return make([]entity.Order, 0), paginationInfo, err
-			}
+			// finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+			// if err != nil {
+			// 	return make([]entity.Order, 0), paginationInfo, err
+			// }
 			finalAddress, err := driver.GetAddressById(address)
 			if err != nil {
 				return make([]entity.Order, 0), paginationInfo, err
@@ -474,7 +466,7 @@ func (driver *orderDriver) FindNotFinishedOrders(pageLimit int, pageOffset int) 
 				Notes:            notes,
 				ProductsCost:     productsCost,
 				Coupon:           coupon,
-				Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
+				Products:         make([]entity.OrderProduct, 0), /*finalOrderProducts*/
 			}
 			notFinishedOrders = append(notFinishedOrders, order)
 			if err = rows.Err(); err != nil {
@@ -520,14 +512,10 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 			return make([]entity.Order, 0), err
 		}
 
-		// fmt.Println("Order Product IDs:", orderProducts)
-		//? To Change Wanting Order Products Uncomment Below
-		finalOrderProducts, err := opd.FindOrderProductsByOrderId(id) // pd.GetIntSliceFromString(orderProducts), true
-		// fmt.Println("Final Order Products:", finalOrderProducts)
-		//? To Change Wanting Order Products Uncomment Below
-		if err != nil {
-			return make([]entity.Order, 0), err
-		}
+		// finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+		// if err != nil {
+		// 	return make([]entity.Order, 0), err
+		// }
 		finalAddress, err := driver.GetAddressById(address)
 		if err != nil {
 			return make([]entity.Order, 0), err
@@ -557,7 +545,7 @@ func (driver *orderDriver) FindUserFinishedOrders(userWantedId int) ([]entity.Or
 			Notes:            notes,
 			ProductsCost:     productsCost,
 			Coupon:           coupon,
-			Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
+			Products:         make([]entity.OrderProduct, 0), /*finalOrderProducts*/
 		}
 		orders = append(orders, order)
 		if err = rows.Err(); err != nil {
@@ -602,14 +590,10 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 			return make([]entity.Order, 0), err
 		}
 
-		// fmt.Println("Order Product IDs:", orderProducts)
-		//? To Change Wanting Order Products Uncomment Below
-		finalOrderProducts, err := opd.FindOrderProductsByOrderId(id) // pd.GetIntSliceFromString(orderProducts), true
-		fmt.Println("Final Order Products:", finalOrderProducts)
-		//? To Change Wanting Order Products Uncomment Below
-		if err != nil {
-			return make([]entity.Order, 0), err
-		}
+		// finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+		// if err != nil {
+		// 	return make([]entity.Order, 0), err
+		// }
 		finalAddress, err := driver.GetAddressById(address)
 		if err != nil {
 			return make([]entity.Order, 0), err
@@ -639,7 +623,7 @@ func (driver *orderDriver) FindUserNotFinishedOrders(userWantedId int) ([]entity
 			Notes:            notes,
 			ProductsCost:     productsCost,
 			Coupon:           coupon,
-			Products:/*make([]entity.OrderProduct, 0)*/ finalOrderProducts,
+			Products:         make([]entity.OrderProduct, 0), /*finalOrderProducts*/
 		}
 		orders = append(orders, order)
 		if err = rows.Err(); err != nil {
@@ -684,10 +668,10 @@ func (driver *orderDriver) FindDeliveryWorkerNotFinishedOrders(userWantedId int)
 			return make([]entity.Order, 0), err
 		}
 
-		finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
-		if err != nil {
-			return make([]entity.Order, 0), err
-		}
+		// finalOrderProducts, err := opd.FindOrderProductsByOrderId(id)
+		// if err != nil {
+		// 	return make([]entity.Order, 0), err
+		// }
 		finalAddress, err := driver.GetAddressById(address)
 		if err != nil {
 			return make([]entity.Order, 0), err
@@ -717,7 +701,7 @@ func (driver *orderDriver) FindDeliveryWorkerNotFinishedOrders(userWantedId int)
 			Notes:            notes,
 			ProductsCost:     productsCost,
 			Coupon:           coupon,
-			Products:         finalOrderProducts,
+			Products:         make([]entity.OrderProduct, 0), /*finalOrderProducts*/
 		}
 		orders = append(orders, order)
 		if err = rows.Err(); err != nil {
@@ -853,8 +837,6 @@ func GetOrderEditStatementString(order entity.OrderEditRequest) string {
 	stmt := `UPDATE orders SET`
 	if order.Ordered {
 		stmt = stmt + ` ordered = true,`
-	} else {
-		stmt = stmt + ` ordered = false,`
 	}
 	if order.OnTheWay {
 		stmt = stmt + ` on_the_way = true,`

@@ -114,5 +114,14 @@
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [16 Oct 23 18:40 +03] GET /api/orders/all/1/20 200 572.0341ms 
-::1 - [16 Oct 23 18:43 +03] GET /api/orders/all/2/20 200 359.5755ms 
+::1 - [16 Oct 23 18:52 +03] GET /api/orders/info/340 200 846.4162ms 
+::1 - [16 Oct 23 18:52 +03] GET /api/orders/finished/1/20 200 332.1758ms 
+::1 - [16 Oct 23 18:53 +03] GET /api/orders/user_finished/1 200 246.8076ms 
+::1 - [16 Oct 23 18:53 +03] GET /api/orders/user_not_finished/1 200 298.5816ms 
+::1 - [16 Oct 23 18:53 +03] GET /api/orders/delivery_worker_not_finished/2 200 116.3151ms 
+::1 - [16 Oct 23 18:53 +03] GET /api/orders/delivery_worker_not_finished/14 200 108.2138ms 
+::1 - [16 Oct 23 18:53 +03] GET /api/orders/delivery_worker_not_finished/2 200 111.6131ms 
+::1 - [16 Oct 23 18:53 +03] GET /api/orders/delivery_worker_not_finished/2 200 236.0913ms 
+::1 - [16 Oct 23 18:54 +03] GET /api/orders/not_finished/1/20 200 376.324ms 
+::1 - [16 Oct 23 18:54 +03] GET /api/orders/info/340 200 263.2659ms 
+::1 - [16 Oct 23 18:55 +03] POST /api/orders/change_state 404 7.764ms 
