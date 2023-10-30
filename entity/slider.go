@@ -2,7 +2,7 @@ package entity
 
 type Slider struct {
 	ID        int    `json:"id"`
-	Image     string `json:"image"  binding:"required"`
+	Image     string `json:"image"  binding:"required"` /*File*/
 	StoreId   int    `json:"store_id"  binding:"required"`
 	ProductId int    `json:"product_id"  binding:"required"`
 	Active    bool   `json:"active"`

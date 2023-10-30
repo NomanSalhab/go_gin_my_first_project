@@ -54,6 +54,11 @@ func (driver *storeDriver) FindAllStores() ([]entity.Store, error) {
 			return make([]entity.Store, 0), err
 		}
 		storeDeliveryRent := deliveryRent - int(discount*float32(deliveryRent))
+		// imageFile, err := fd.GetFileInfo(image)
+		// if err != nil {
+		// 	return make([]entity.Store, 0), err
+		// }
+
 		stores = append(stores, entity.Store{
 			ID:              id,
 			Name:            name,
@@ -96,6 +101,11 @@ func (driver *storeDriver) FindActiveStores(wantedId int) ([]entity.Store, error
 			return make([]entity.Store, 0), err
 		}
 		storeDeliveryRent := deliveryRent - int(discount*float32(deliveryRent))
+		// imageFile, err := fd.GetFileInfo(image)
+		// if err != nil {
+		// 	return make([]entity.Store, 0), err
+		// }
+
 		stores = append(stores, entity.Store{
 			ID:              id,
 			Name:            name,
@@ -138,6 +148,10 @@ func (driver *storeDriver) FindNotActiveStores() ([]entity.Store, error) {
 			return make([]entity.Store, 0), err
 		}
 		storeDeliveryRent := deliveryRent - int(discount*float32(deliveryRent))
+		// imageFile, err := fd.GetFileInfo(image)
+		// if err != nil {
+		// 	return make([]entity.Store, 0), err
+		// }
 		stores = append(stores, entity.Store{
 			ID:              id,
 			Name:            name,
@@ -179,6 +193,10 @@ func (driver *storeDriver) FindStoreCategoryStores(wantedId int) ([]entity.Store
 			// log.Println(err)
 			return make([]entity.Store, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+		// if err != nil {
+		// 	return make([]entity.Store, 0), err
+		// }
 		stores = append(stores, entity.Store{
 			ID:              id,
 			Name:            name,
@@ -218,6 +236,10 @@ func (driver *storeDriver) FindStore(wantedId int) (entity.Store, error) {
 		}, err
 	}
 	storeDeliveryRent := deliveryRent - int(discount*float32(deliveryRent))
+	// imageFile, err := fd.GetFileInfo(image)
+	// if err != nil {
+	// 	return entity.Store{}, err
+	// }
 
 	store := entity.Store{
 		ID:              id,
@@ -279,7 +301,7 @@ func (driver *storeDriver) EditStore(storeEditInfo entity.StoreEditRequest) (ent
 
 	stmt := driver.GetEditStoreStatementString(storeEditInfo)
 
-	result, err := dbConn.SQL.ExecContext(ctx, stmt, storeEditInfo.Name, storeEditInfo.ID)
+	result, err := dbConn.SQL.ExecContext(ctx, stmt, storeEditInfo.ID)
 	if err != nil {
 		return entity.Store{}, err
 	}
@@ -287,10 +309,10 @@ func (driver *storeDriver) EditStore(storeEditInfo entity.StoreEditRequest) (ent
 	if rowsAffected == 0 {
 		return entity.Store{}, errors.New("store could not be found")
 	}
-	store, err := driver.FindStore(storeEditInfo.ID)
-	if err != nil {
-		return entity.Store{}, err
-	}
+	store, _ := driver.FindStore(storeEditInfo.ID)
+	// if err != nil {
+	// 	return entity.Store{}, err
+	// }
 	return store, nil
 }
 
@@ -315,14 +337,14 @@ func (driver *storeDriver) GetEditStoreStatementString(storeEditInfo entity.Stor
 		stmt = stmt + `discount = '` + fmt.Sprint(storeEditInfo.Discount) + `', `
 	}
 	if storeEditInfo.AreaID != 0 {
-		stmt = stmt + `area_id = ` + fmt.Sprint(storeEditInfo.AreaID) + `, `
+		stmt = stmt + `area_id = ` + fmt.Sprint(storeEditInfo.AreaID) + ` ` // ,
 	}
-	if storeEditInfo.Active {
-		stmt = stmt + `active = true `
-	} else {
-		stmt = stmt + `active = false `
-	}
-	stmt = stmt + `where id = ` + fmt.Sprint(storeEditInfo.ID) + ` RETURNING *`
+	// if storeEditInfo.Active {
+	// 	stmt = stmt + `active = true `
+	// } else {
+	// 	stmt = stmt + `active = false `
+	// }
+	stmt = stmt + `where id = ` + /*fmt.Sprint(storeEditInfo.ID)  */ `$1` + ` RETURNING *`
 	return stmt
 }
 
@@ -404,6 +426,10 @@ func (driver *storeDriver) FindBestSellingStores(storesCountLimit int, wantedAre
 			// log.Println(err)
 			return make([]entity.Store, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+		// if err != nil {
+		// 	return make([]entity.Store, 0), err
+		// }
 		stores = append(stores, entity.Store{
 			ID:              id,
 			Name:            name,

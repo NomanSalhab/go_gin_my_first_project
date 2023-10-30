@@ -3,10 +3,12 @@ package service
 import (
 	"github.com/NomanSalhab/go_gin_my_first_project/driver"
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
+	"github.com/google/uuid"
 )
 
 type SliderService interface {
 	AddSlider(slider entity.Slider) error
+	UploadImage(imageFile entity.File, filePath string) entity.File
 	FindAllSliders() []entity.Slider
 	FindActiveSliders() []entity.Slider
 	FindNotActiveSliders() []entity.Slider
@@ -24,7 +26,6 @@ func NewSliderService(driver driver.SliderDriver) SliderService {
 		driver: driver,
 	}
 }
-
 func (service *sliderService) AddSlider(slider entity.Slider) error {
 	err := service.driver.AddSlider(slider)
 	if err != nil {
@@ -188,4 +189,28 @@ func (service *sliderService) DeleteSlider(sliderDeleteInfo entity.SliderEditReq
 	// }
 	// service.sliders = tempSlider
 	// return nil
+}
+
+func (service *sliderService) UploadImage(imageFile entity.File, filePath string) entity.File {
+	// file, err := ctx.FormFile("file")
+	// if err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	// // Define the path where the file will be saved
+	// filePath := filepath.Join("images", file.Filename)
+	// // Save the file to the defined path
+	// if err := ctx.SaveUploadedFile(file, filePath); err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+	// 	return
+	// }
+	// Generate a unique identifier for the file
+	uuid := uuid.New().String()
+	// Save file metadata to database
+	fileMetadata := entity.File{
+		Filename: imageFile.Filename,
+		UUID:     uuid,
+	}
+
+	return fileMetadata
 }

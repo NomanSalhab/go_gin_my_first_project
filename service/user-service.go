@@ -94,7 +94,7 @@ func (service *userService) FindActiveUsers() []entity.User {
 }
 
 func (service *userService) FindNotActiveUsers() []entity.User {
-	notActiveUsers, err := service.driver.FindActiveUsers()
+	notActiveUsers, err := service.driver.FindNotActiveUsers()
 	if err != nil {
 		return make([]entity.User, 0)
 	}

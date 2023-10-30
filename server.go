@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/controller"
@@ -29,6 +30,10 @@ var (
 	storeDriver     driver.StoreDriver         = driver.NewStoreDriver()
 	storeService    service.StoreService       = service.NewStoreService(storeDriver)
 	StoreController controller.StoreController = controller.NewStoreController(storeService)
+
+	fileDriver     driver.FileDriver         = driver.NewFileDriver()
+	fileService    service.FileService       = service.NewFileService(fileDriver)
+	fileController controller.FileController = controller.NewFileController(fileService)
 
 	productCategoryDriver     driver.ProductCategoryDriver         = driver.NewProductCategoryDriver()
 	productCategoryService    service.ProductCategoryService       = service.NewProductCategoryService(productCategoryDriver)
@@ -596,7 +601,7 @@ func main() {
 		})
 
 		apiStoresRoutes.POST("/add", func(ctx *gin.Context) {
-			err := StoreController.AddStore(ctx, StoreCategoryController)
+			err := StoreController.AddStore(ctx, StoreCategoryController, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -614,7 +619,7 @@ func main() {
 		})
 
 		apiStoresRoutes.PUT("/edit", func(ctx *gin.Context) {
-			err := StoreController.EditStore(ctx, StoreCategoryController)
+			err := StoreController.EditStore(ctx, StoreCategoryController, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -641,7 +646,7 @@ func main() {
 		})
 
 		apiStoresRoutes.DELETE("/delete", func(ctx *gin.Context) {
-			err := StoreController.DeleteStore(ctx)
+			err := StoreController.DeleteStore(ctx, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -754,7 +759,7 @@ func main() {
 		})
 
 		apiSlidersRoutes.POST("/add", func(ctx *gin.Context) {
-			err := sliderController.AddSlider(ctx)
+			err := sliderController.AddSlider(ctx, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -772,12 +777,33 @@ func main() {
 		})
 
 		apiSlidersRoutes.DELETE("/delete", func(ctx *gin.Context) {
-			err := sliderController.DeleteSlider(ctx)
+			err := sliderController.DeleteSlider(ctx, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
 				ctx.JSON(http.StatusOK, gin.H{"message": "slider is deleted successfully"})
 			}
+		})
+
+	}
+
+	apiFilesRoutes := server.Group("/api/files")
+	{
+		apiFilesRoutes.GET("/get/:uuid", func(ctx *gin.Context) {
+
+			// server.Static("/images", "./images")
+			// server.StaticFS("/more_static", http.Dir("my_file_system"))
+			// server.StaticFile("/Screenshot (979).png", "./images/Screenshot (979).png")
+
+			// server.Static("/images", "./Screenshot (979).png")
+			// ctx.JSON(200, sliderController.FindAllSliders())
+			uuid := ctx.Param("uuid")
+			file, err := fileController.GetFileInfo(uuid)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			filePath := filepath.Join("./images", file.Filename)
+			ctx.File(filePath)
 		})
 
 	}
@@ -977,7 +1003,7 @@ func main() {
 		})
 
 		apiProductsRoutes.POST("/add", func(ctx *gin.Context) {
-			err := ProductController.AddProduct(ctx, ProductCategoryController, StoreController)
+			err := ProductController.AddProduct(ctx, ProductCategoryController, StoreController, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -995,7 +1021,7 @@ func main() {
 		})
 
 		apiProductsRoutes.PUT("/edit", func(ctx *gin.Context) {
-			err := ProductController.EditProduct(ctx, ProductCategoryController, StoreController)
+			err := ProductController.EditProduct(ctx, ProductCategoryController, StoreController, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -1022,7 +1048,7 @@ func main() {
 		})
 
 		apiProductsRoutes.DELETE("/delete", func(ctx *gin.Context) {
-			err := ProductController.DeleteProduct(ctx)
+			err := ProductController.DeleteProduct(ctx, fileController)
 			if err != nil {
 				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {

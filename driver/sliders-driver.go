@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
+	"github.com/google/uuid"
 )
 
 type SliderDriver interface {
@@ -44,6 +45,12 @@ func (driver *sliderDriver) FindAllSliders() ([]entity.Slider, error) {
 		if err != nil {
 			return make([]entity.Slider, 0), err
 		}
+		fmt.Println("UUID:", image)
+		// imageFile, err := fd.GetFileInfo(image)
+		// fmt.Println("Image File:", image)
+		// if err != nil {
+		// 	return make([]entity.Slider, 0), err
+		// }
 		sliders = append(sliders, entity.Slider{
 			ID:        id,
 			Image:     image,
@@ -76,6 +83,10 @@ func (driver *sliderDriver) FindActiveSliders() ([]entity.Slider, error) {
 		if err != nil {
 			return make([]entity.Slider, 0), err
 		}
+		// imageFile := entity.File{
+		// 	Filename: "",
+		// 	UUID:     image,
+		// }
 		sliders = append(sliders, entity.Slider{
 			ID:        id,
 			Image:     image,
@@ -108,6 +119,10 @@ func (driver *sliderDriver) FindNotActiveSliders() ([]entity.Slider, error) {
 		if err != nil {
 			return make([]entity.Slider, 0), err
 		}
+		// imageFile := entity.File{
+		// 	Filename: "",
+		// 	UUID:     image,
+		// }
 		sliders = append(sliders, entity.Slider{
 			ID:        id,
 			Image:     image,
@@ -140,6 +155,10 @@ func (driver *sliderDriver) FindSlidersByStore(wantedId int) ([]entity.Slider, e
 		if err != nil {
 			return make([]entity.Slider, 0), err
 		}
+		// imageFile := entity.File{
+		// 	Filename: "",
+		// 	UUID:     image,
+		// }
 		sliders = append(sliders, entity.Slider{
 			ID:        id,
 			Image:     image,
@@ -231,4 +250,27 @@ func (driver *sliderDriver) GetEditSliderStatementString(sliderEditInfo entity.S
 	}
 	stmt = stmt + `where id = ` + fmt.Sprint(sliderEditInfo.ID) + ` RETURNING *`
 	return stmt
+}
+func (driver *sliderDriver) UploadImage(imageFile entity.File, filePath string) entity.File {
+	// file, err := ctx.FormFile("file")
+	// if err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
+	// // Define the path where the file will be saved
+	// filePath := filepath.Join("images", file.Filename)
+	// // Save the file to the defined path
+	// if err := ctx.SaveUploadedFile(file, filePath); err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+	// 	return
+	// }
+	// Generate a unique identifier for the file
+	uuid := uuid.New().String()
+	// Save file metadata to database
+	fileMetadata := entity.File{
+		Filename: imageFile.Filename,
+		UUID:     uuid,
+	}
+
+	return fileMetadata
 }

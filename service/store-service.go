@@ -16,7 +16,7 @@ type StoreService interface {
 	EditStore(storeEditInfo entity.StoreEditRequest) error
 	ActivateStore(storeEditInfo entity.StoreInfoRequest) error
 	DeactivateStore(storeEditInfo entity.StoreInfoRequest) error
-	DeleteStore(store entity.StoreDeleteRequest) error
+	DeleteStore(store entity.StoreInfoRequest) error
 
 	// AddMockStores(stores []entity.Store)
 }
@@ -214,7 +214,7 @@ func (service *storeService) DeactivateStore(storeEditInfo entity.StoreInfoReque
 	// return errors.New("the store couldn't be found")
 }
 
-func (service *storeService) DeleteStore(storeId entity.StoreDeleteRequest) error {
+func (service *storeService) DeleteStore(storeId entity.StoreInfoRequest) error {
 	err := service.driver.DeleteStore(storeId.ID)
 	if err != nil {
 		return err

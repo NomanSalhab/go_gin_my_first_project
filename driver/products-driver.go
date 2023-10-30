@@ -64,6 +64,11 @@ func (driver *productDriver) FindAllProducts() ([]entity.Product, error) {
 		if err != nil {
 			return make([]entity.Product, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+
+		// if err != nil {
+		// 	return make([]entity.Product, 0), err
+		// }
 		products = append(products, entity.Product{
 			ID:                id,
 			Name:              name,
@@ -111,6 +116,11 @@ func (driver *productDriver) FindActiveProducts() ([]entity.Product, error) {
 		if err != nil {
 			return make([]entity.Product, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+
+		// if err != nil {
+		// 	return make([]entity.Product, 0), err
+		// }
 		products = append(products, entity.Product{
 			ID:                id,
 			Name:              name,
@@ -155,6 +165,11 @@ func (driver *productDriver) FindNotActiveProducts() ([]entity.Product, error) {
 		if err != nil {
 			return make([]entity.Product, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+
+		// if err != nil {
+		// 	return make([]entity.Product, 0), err
+		// }
 		products = append(products, entity.Product{
 			ID:                id,
 			Name:              name,
@@ -199,6 +214,11 @@ func (driver *productDriver) FindProductByProductCategory(wantedProductStoreId i
 		if err != nil {
 			return make([]entity.Product, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+
+		// if err != nil {
+		// 	return make([]entity.Product, 0), err
+		// }
 		products = append(products, entity.Product{
 			ID:                id,
 			Name:              name,
@@ -370,6 +390,11 @@ func (driver *productDriver) FindProduct(wantedId int) (entity.Product, error) {
 	// fmt.Println("final addons", finalAddons)
 	// fmt.Println("addons", addons)
 
+	// imageFile, err := fd.GetFileInfo(image)
+
+	// if err != nil {
+	// 	return entity.Product{}, err
+	// }
 	product := entity.Product{
 		ID:                id,
 		Name:              name,
@@ -535,6 +560,53 @@ func (driver *productDriver) EditProduct(productEditInfo entity.ProductEditReque
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
+	if productEditInfo.ProductCategoryId != 0 {
+		if productEditInfo.StoreId == 0 {
+			product, err := driver.FindProduct(productEditInfo.ID)
+			if err != nil {
+				return entity.Product{}, err
+			}
+			productCategoryToStoreBool, err := IsProductCategoryRelatedToStore(productEditInfo.ProductCategoryId, product.StoreId)
+			if err != nil {
+				return entity.Product{}, err
+			}
+			if !productCategoryToStoreBool {
+				return entity.Product{}, errors.New("product category is not linked to specified store")
+			}
+		} else {
+			productCategoryToStoreBool, err := IsProductCategoryRelatedToStore(productEditInfo.ProductCategoryId, productEditInfo.StoreId)
+			if err != nil {
+				return entity.Product{}, err
+			}
+			if !productCategoryToStoreBool {
+				return entity.Product{}, errors.New("product category is not linked to specified store")
+			}
+		}
+	}
+	if productEditInfo.StoreId != 0 {
+		if productEditInfo.ProductCategoryId == 0 {
+			product, err := driver.FindProduct(productEditInfo.ID)
+			if err != nil {
+				return entity.Product{}, err
+			}
+			productCategoryToStoreBool, err := IsProductCategoryRelatedToStore(product.ProductCategoryId, productEditInfo.StoreId)
+			if err != nil {
+				return entity.Product{}, err
+			}
+			if !productCategoryToStoreBool {
+				return entity.Product{}, errors.New("product category is not linked to specified store")
+			}
+		} else {
+			productCategoryToStoreBool, err := IsProductCategoryRelatedToStore(productEditInfo.ProductCategoryId, productEditInfo.StoreId)
+			if err != nil {
+				return entity.Product{}, err
+			}
+			if !productCategoryToStoreBool {
+				return entity.Product{}, errors.New("product category is not linked to specified store")
+			}
+		}
+	}
+
 	stmt := driver.GetEditProductStatementString(productEditInfo)
 
 	result, err := dbConn.SQL.ExecContext(ctx, stmt)
@@ -545,10 +617,12 @@ func (driver *productDriver) EditProduct(productEditInfo entity.ProductEditReque
 	if rowsAffected == 0 {
 		return entity.Product{}, errors.New("product could not be found")
 	}
-	product, err := driver.FindProduct(productEditInfo.ID)
-	if err != nil {
-		return entity.Product{}, err
-	}
+	product, _ := driver.FindProduct(productEditInfo.ID)
+	// fmt.Println("Product ID:", productEditInfo.ID)
+	// fmt.Println("Error:", err.Error())
+	// if err != nil {
+	// 	return entity.Product{}, err
+	// }
 	return product, nil
 }
 
@@ -655,6 +729,11 @@ func (driver *productDriver) FindBestSellingProducts(productsCountLimit int) ([]
 			// log.Println(err)
 			return make([]entity.Product, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+
+		// if err != nil {
+		// 	return make([]entity.Product, 0), err
+		// }
 		bestSellingProducts = append(bestSellingProducts, entity.Product{
 			ID:                id,
 			Name:              name,
@@ -699,6 +778,11 @@ func (driver *productDriver) FindOffersProducts() ([]entity.Product, error) {
 			// log.Println(err)
 			return make([]entity.Product, 0), err
 		}
+		// imageFile, err := fd.GetFileInfo(image)
+
+		// if err != nil {
+		// 	return make([]entity.Product, 0), err
+		// }
 		offersProducts = append(offersProducts, entity.Product{
 			ID:            id,
 			Name:          name,
@@ -716,4 +800,12 @@ func (driver *productDriver) FindOffersProducts() ([]entity.Product, error) {
 	}
 
 	return offersProducts, nil
+}
+
+func IsProductCategoryRelatedToStore(productCategoryId int, storeId int) (bool, error) {
+	productCategory, err := pcd.FindProductCategory(productCategoryId)
+	if err != nil {
+		return false, err
+	}
+	return productCategory.StoreId == storeId, nil
 }

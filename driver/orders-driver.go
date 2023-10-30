@@ -44,13 +44,15 @@ func NewOrderDriver() OrderDriver {
 }
 
 var (
-	dd  DetailDriver        = NewDetailDriver()
-	pd  ProductDriver       = NewProductDriver()
-	ud  UserDriver          = NewUserDriver()
-	sd  StoreDriver         = NewStoreDriver()
-	cd  CouponDriver        = NewCouponDriver()
-	opd OrderProductsDriver = NewOrderProductsDriver()
-	ad  AreaDriver          = NewAreaDriver()
+	dd  DetailDriver          = NewDetailDriver()
+	pd  ProductDriver         = NewProductDriver()
+	pcd ProductCategoryDriver = NewProductCategoryDriver()
+	ud  UserDriver            = NewUserDriver()
+	sd  StoreDriver           = NewStoreDriver()
+	cd  CouponDriver          = NewCouponDriver()
+	opd OrderProductsDriver   = NewOrderProductsDriver()
+	ad  AreaDriver            = NewAreaDriver()
+	// fd  FileDriver          = NewFileDriver()
 )
 
 func (driver *orderDriver) FindAllOrders(pageLimit int, pageOffset int) ([]entity.Order, entity.PaginationInfo, error) {
@@ -195,18 +197,19 @@ func (driver *orderDriver) AddOrder(order entity.Order) error {
 			userDeliveryCost = 0
 		}
 
-		stmt := `INSERT INTO orders(
-		user_id, order_time, delivery_time,
-		products_cost, address,
-		delivery_cost, notes, delivery_worker_id,
-		finished, ordered, on_the_way, coupon_id
-	)
-	VALUES (
-		$1, $2, $3,
-		$4, $5, $6,
-		$7, $8, $9,
-		$10, $11, $12
-	) returning *` // order_products, , $12
+		stmt := `
+		INSERT INTO orders(
+			user_id, order_time, delivery_time,
+			products_cost, address,
+			delivery_cost, notes, delivery_worker_id,
+			finished, ordered, on_the_way, coupon_id
+		)
+		VALUES (
+			$1, $2, $3,
+			$4, $5, $6,
+			$7, $8, $9,
+			$10, $11, $12
+		) returning *` // order_products, , $12
 
 		result, err := dbConn.SQL.ExecContext(ctx, stmt,
 			order.UserID, order.OrderTime, order.DeliveryTime,

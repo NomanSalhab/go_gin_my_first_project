@@ -344,13 +344,18 @@ func (driver *detailDriver) FindProductsDetails(productDetails []int) ([]entity.
 		return wantedDetails, nil
 	} else {
 		var details []entity.DetailEditRequest
+		if len(productDetails) == 0 {
+			return make([]entity.DetailEditRequest, 0), nil
+		}
+		// fmt.Println("productDetails:", productDetails)
 		query := driver.GetProductDetailsString(productDetails)
 		// fmt.Println("Query is:", query)
 		rows, err := dbConn.SQL.Query(query)
 		if err != nil {
-			// fmt.Println("scan0 error:", err)
+			// fmt.Println("scan0 error:", err.Error())
 			return make([]entity.DetailEditRequest, 0), err
 		}
+		// fmt.Println("productDetails Length:", len(productDetails))
 		defer rows.Close()
 
 		var id, price int
@@ -386,15 +391,19 @@ func (driver *detailDriver) FindProductsDetails(productDetails []int) ([]entity.
 }
 
 func (driver *detailDriver) GetProductDetailsString(productDetails []int) string {
-	stmt := `select id, name, is_addon, is_flavor, is_volume, price from details where `
+	if len(productDetails) != 0 {
+		stmt := `select id, name, is_addon, is_flavor, is_volume, price from details where `
 
-	for i := 0; i < len(productDetails)-1; i++ {
-		stmt = stmt + `id = ` + fmt.Sprint(productDetails[i]) + ` or `
+		for i := 0; i < len(productDetails)-1; i++ {
+			stmt = stmt + `id = ` + fmt.Sprint(productDetails[i]) + ` or `
+		}
+		stmt = stmt + `id = ` + fmt.Sprint(productDetails[len(productDetails)-1]) + ``
+
+		// fmt.Println("Statement is:", stmt)
+		return stmt
+	} else {
+		return `select id, name, is_addon, is_flavor, is_volume, price from details where id = 0`
 	}
-	stmt = stmt + `id = ` + fmt.Sprint(productDetails[len(productDetails)-1]) + ``
-
-	// fmt.Println("Statement is:", stmt)
-	return stmt
 }
 
 func (driver *detailDriver) SeparateProductDetails(details []entity.DetailEditRequest) ([]entity.DetailEditRequest, []entity.DetailEditRequest, []entity.DetailEditRequest) {
