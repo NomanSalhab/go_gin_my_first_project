@@ -128,7 +128,7 @@ func (service *productService) FindProduct(id entity.ProductInfoRequest) (entity
 }
 
 func (service *productService) FindProductsByCategory(id entity.ProductByCategoryRequest) ([]entity.Product, error) {
-	productCategoryProducts, err := service.driver.FindProductByProductCategory(id.StoreId, id.ProductCategoryId)
+	productCategoryProducts, err := service.driver.FindProductByProductCategory( /*id.StoreId, */ id.ProductCategoryId)
 	if err != nil {
 		return make([]entity.Product, 0), err
 	}

@@ -22,7 +22,7 @@ type ProductInfoRequest struct {
 
 type ProductByCategoryRequest struct {
 	ID                int `json:"id"`
-	StoreId           int `json:"store_id" binding:"required"`
+	StoreId           int `json:"store_id"` //  binding:"required"
 	ProductCategoryId int `json:"product_category_id" binding:"required"`
 }
 

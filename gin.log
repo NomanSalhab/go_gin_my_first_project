@@ -115,6 +115,12 @@
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :8016
-::1 - [30 Oct 23 17:02 +03] POST /api/products/add 400 138.8773ms 
-::1 - [30 Oct 23 17:02 +03] POST /api/products/add 200 132.6679ms 
-::1 - [30 Oct 23 17:02 +03] GET /api/files/get/6cbf406a-a27d-4c44-b210-252c30924a3b 200 303.8701ms 
+::1 - [08 Nov 23 15:12 +03] POST /api/users/login 400 1.7352891s 
+::1 - [08 Nov 23 15:12 +03] PUT /api/users/edit 200 1.4852287s 
+::1 - [08 Nov 23 15:13 +03] POST /api/users/login 400 1.5670224s 
+::1 - [08 Nov 23 15:13 +03] POST /api/users/login 200 1.5076102s 
+::1 - [08 Nov 23 15:13 +03] POST /api/users/login 400 1.5212451s 
+::1 - [08 Nov 23 15:13 +03] POST /api/users/login 200 1.5562455s 
+::1 - [08 Nov 23 15:14 +03] PUT /api/users/edit 200 1.5626456s 
+::1 - [08 Nov 23 15:14 +03] PUT /api/users/edit 200 1.7836994s 
+::1 - [08 Nov 23 15:14 +03] PUT /api/users/edit 200 1.6659775s 

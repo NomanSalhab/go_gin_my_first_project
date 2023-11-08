@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
+	"github.com/NomanSalhab/go_gin_my_first_project/middlewares"
 )
 
 type UserDriver interface {
@@ -465,7 +466,7 @@ func (driver *userDriver) LoginUser(userLoginInfo entity.UserLoginRequest) (enti
 			Role:     0,
 		}, errors.New("user phone does not exist")
 	}
-	if userLoginInfo.Password != password {
+	if /*userLoginInfo.Password != password*/ !middlewares.CheckPasswordHash(userLoginInfo.Password, password) {
 		return entity.User{
 			ID:       0,
 			Name:     "",

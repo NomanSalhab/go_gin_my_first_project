@@ -2,8 +2,10 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/NomanSalhab/go_gin_my_first_project/entity"
+	"github.com/NomanSalhab/go_gin_my_first_project/middlewares"
 	"github.com/NomanSalhab/go_gin_my_first_project/service"
 	"github.com/NomanSalhab/go_gin_my_first_project/validators"
 	"github.com/gin-gonic/gin"
@@ -69,6 +71,11 @@ func (c *userController) SaveUser(ctx *gin.Context) error {
 		return err
 	}
 
+	user.Password, err = middlewares.HashPassword(user.Password)
+	fmt.Println("Password", user.Password)
+	if err != nil {
+		return err
+	}
 	err = c.service.Save(user)
 	if err != nil {
 		return err
@@ -116,10 +123,17 @@ func (c *userController) LoginUser(ctx *gin.Context) (entity.User, error) {
 	if err != nil {
 		return user, err
 	}
+	// userAuth.Password, err = middlewares.HashPassword(userAuth.Password)
+	// fmt.Println("Password", userAuth.Password)
+	// if err != nil {
+	// 	return user, err
+	// }
+
 	user, err = c.service.LoginUser(userAuth)
 	if err != nil {
 		return user, err
 	}
+	// middlewares.CheckPasswordHash(user.Password, userAuth.Password)
 	return user, nil
 }
 
@@ -128,6 +142,11 @@ func (c *userController) EditUser(ctx *gin.Context) error {
 	// var userId entity.UserInfoRequest
 	var user entity.UserEditRequest
 	err := ctx.ShouldBindJSON(&user)
+	if err != nil {
+		return err
+	}
+	user.Password, err = middlewares.HashPassword(user.Password)
+	fmt.Println("Password", user.Password)
 	if err != nil {
 		return err
 	}

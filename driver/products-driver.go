@@ -15,7 +15,7 @@ type ProductDriver interface {
 	FindAllProducts() ([]entity.Product, error)
 	FindActiveProducts() ([]entity.Product, error)
 	FindNotActiveProducts() ([]entity.Product, error)
-	FindProductByProductCategory(wantedProductStoreId int, wantedProductCategoryId int) ([]entity.Product, error)
+	FindProductByProductCategory( /*wantedProductStoreId int, */ wantedProductCategoryId int) ([]entity.Product, error)
 	FindProduct(wantedId int) (entity.Product, error)
 	FindBestSellingProducts(productsCountLimit int) ([]entity.Product, error)
 	FindOffersProducts() ([]entity.Product, error)
@@ -193,12 +193,12 @@ func (driver *productDriver) FindNotActiveProducts() ([]entity.Product, error) {
 	return products, nil
 }
 
-func (driver *productDriver) FindProductByProductCategory(wantedProductStoreId int, wantedProductCategoryId int) ([]entity.Product, error) {
+func (driver *productDriver) FindProductByProductCategory( /*wantedProductStoreId int, */ wantedProductCategoryId int) ([]entity.Product, error) {
 	products := make([]entity.Product, 0)
 	rows, err := dbConn.SQL.Query(`
 		select id, name, store_id, product_category_id, 
 			image, summary, price, order_count, active, discount_ratio 
-		from products where store_id = $1 and product_category_id = $2`, wantedProductStoreId, wantedProductCategoryId)
+		from products where product_category_id = $1`, wantedProductCategoryId) /* store_id = $1 and , wantedProductStoreId*/
 	if err != nil {
 		return make([]entity.Product, 0), err
 	}
